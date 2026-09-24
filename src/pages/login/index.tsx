@@ -53,6 +53,7 @@ export default function LoginPage() {
   const location = useLocation();
   const setAuth = useAppStore((state) => state.setAuth);
   const colorPrimary = useAppStore((state) => state.colorPrimary);
+  const resolvedTheme = useAppStore((state) => state.theme);
   const { message } = App.useApp();
   const root = useRef<HTMLDivElement>(null);
 
@@ -161,7 +162,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-page" ref={root} style={{ '--brand': colorPrimary } as CSSProperties}>
+    <div
+      className={`auth-page${resolvedTheme === 'dark' ? ' dark' : ''}`}
+      ref={root}
+      style={{ '--brand': colorPrimary } as CSSProperties}
+    >
       {/* 语言 / 主题切换（与 AppHeader 共用组件） */}
       <div className="theme-switch">
         <LangSwitch />

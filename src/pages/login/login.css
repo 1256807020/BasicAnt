@@ -5,7 +5,35 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: #fff;
+  background: var(--page-bg);
+
+  /* ============ 主题变量（浅色默认） ============ */
+  --page-bg: #ffffff;
+  --main-bg: #ffffff;
+  --main-glow: color-mix(in srgb, var(--brand, #1677ff) 9%, #ffffff);
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.04);
+  --card-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+  --card-shadow-hover: 0 32px 90px rgba(15, 23, 42, 0.16);
+  --sub-text: rgba(0, 0, 0, 0.45);
+  --pill-bg: rgba(255, 255, 255, 0.72);
+  --pill-border: transparent;
+  --pill-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
+}
+
+/* ============ 暗黑主题覆盖 ============ */
+.auth-page.dark {
+  --page-bg: #0d0d0d;
+  --main-bg: #0d0d0d;
+  --main-glow: color-mix(in srgb, var(--brand, #1677ff) 16%, #0d0d0d);
+  --card-bg: #1d1d1d;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  --card-shadow-hover: 0 32px 90px rgba(0, 0, 0, 0.6);
+  --sub-text: rgba(255, 255, 255, 0.45);
+  --pill-bg: rgba(255, 255, 255, 0.1);
+  --pill-border: rgba(255, 255, 255, 0.12);
+  --pill-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
 }
 
 /* ============ 左侧介绍区 ============ */
@@ -28,6 +56,16 @@
     color-mix(in srgb, var(--brand, #1677ff) 88%, #000) 0%,
     var(--brand, #1677ff) 52%,
     color-mix(in srgb, var(--brand, #1677ff) 72%, #fff) 100%
+  );
+}
+
+/* 暗黑下左侧渐变整体压暗，避免与深色页面脱节 */
+.auth-page.dark .intro-bg {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand, #1677ff) 45%, #000) 0%,
+    color-mix(in srgb, var(--brand, #1677ff) 68%, #000) 52%,
+    color-mix(in srgb, var(--brand, #1677ff) 86%, #000) 100%
   );
 }
 
@@ -157,11 +195,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: radial-gradient(
-    circle at 82% 8%,
-    color-mix(in srgb, var(--brand, #1677ff) 9%, #fff),
-    #fff 60%
-  );
+  background: radial-gradient(circle at 82% 8%, var(--main-glow), var(--main-bg) 60%);
 }
 
 .auth-card {
@@ -169,9 +203,9 @@
   max-width: 420px;
   padding: 36px 32px 28px;
   border-radius: 18px;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
@@ -179,7 +213,7 @@
 
 .auth-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 32px 90px rgba(15, 23, 42, 0.16);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .auth-brand {
@@ -211,7 +245,7 @@
 
 .brand-sub {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--sub-text);
 }
 
 .auth-card .ant-tabs {
@@ -229,9 +263,10 @@
   gap: 2px;
   padding: 4px 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--pill-bg);
+  border: 1px solid var(--pill-border);
   backdrop-filter: blur(10px);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--pill-shadow);
 }
 
 /* ============ 响应式：窄屏隐藏介绍区 ============ */
