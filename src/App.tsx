@@ -31,6 +31,11 @@ export default function App() {
     return () => mq.removeEventListener('change', onChange);
   }, [themeKey]);
 
+  // 全局暗黑态：同步到 <html class="dark">，前后台共用同一套 .dark 样式
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+  }, [resolvedTheme]);
+
   return (
     <ConfigProvider
       locale={zhCN}
