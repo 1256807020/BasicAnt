@@ -63,9 +63,10 @@
 
 ## 4. 鉴权
 
-- **请求头**：`Authorization: Bearer <token>`
-- **审计头**（后端记录「谁在操作」）：`x-user-id`、`x-user-name`
-- token 来自登录接口返回的 `data.token`，前端存于 `localStorage`，由 `utils/auth.ts` 管理。
+- **token 为后端签发的 HS256 JWT**（零依赖，BasicApi `utils/jwt.js`）；登录接口返回的 `data.token` 即 JWT 字符串（三段式：`header.payload.signature`）。
+- **请求头**：`Authorization: Bearer <token>`；后端 `authGuard` 中间件校验签名与有效期，缺 / 过期 / 篡改一律返回 401。
+- **禁止客户端自报身份**：审计所需的「操作人」由后端从已校验的 JWT（`uid` / `username`）解析，不再读取前端传入的 `x-user-id` / `x-user-name`（防身份伪造）。
+- token 前端存于 `localStorage`，由 `utils/auth.ts` 管理；JWT 无状态，过期后由后端返 401 触发前端重新登录（`/tools/jwt/*` 仅用于本地调试签发/校验，不参与鉴权）。
 
 ---
 

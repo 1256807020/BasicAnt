@@ -23,32 +23,11 @@ export const request = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-/**
- * 读取当前操作人，写入 x-user-id / x-user-name
- * 后端审计中间件据此记录「谁做的操作」
- */
-function readOperator(): { id: string; name: string } {
-  try {
-    const raw = localStorage.getItem('reactadm_app');
-    if (!raw) return { id: '', name: '' };
-    const parsed = JSON.parse(raw) as {
-      state?: { userInfo?: { id?: string | number; username?: string } };
-    };
-    const user = parsed.state?.userInfo;
-    return { id: user?.id ? String(user.id) : '', name: user?.username ?? '' };
-  } catch {
-    return { id: '', name: '' };
-  }
-}
-
 request.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  // 身份凭证只通过 Authorization: Bearer <JWT> 传递；
+  // 后端校验 JWT 后据此确定操作人，不再信任客户端自报的 x-user-id / x-user-name
   const token = getToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
-
-  const operator = readOperator();
-  if (operator.id) config.headers['x-user-id'] = operator.id;
-  if (operator.name) config.headers['x-user-name'] = operator.name;
-
   return config;
 });
 
