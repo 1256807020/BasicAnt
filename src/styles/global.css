@@ -34,6 +34,21 @@ body {
   position: sticky;
   top: 0;
   overflow: auto;
+  /* 跟随主题主色的纵向渐变（--brand 由 App.tsx 注入） */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand, #1677ff) 78%, #001529) 0%,
+    color-mix(in srgb, var(--brand, #1677ff) 88%, #000) 100%
+  );
+}
+
+html.dark .app-sider {
+  /* 暗黑主题：渐变黑，与登录页左侧同款风格 */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand, #1677ff) 18%, #000) 0%,
+    #0a0a0a 100%
+  );
 }
 
 .app-logo {
@@ -53,18 +68,19 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
+  /* 浅色：白底带一丝主色；文字按钮清晰可见 */
+  background: color-mix(in srgb, var(--brand, #1677ff) 4%, #fff);
   box-shadow: 0 1px 4px rgb(0 21 41 / 8%);
+}
+
+html.dark .app-header {
+  background: #141414;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
 }
 
 .app-content {
   padding: 16px;
   overflow: auto;
-}
-
-.app-footer {
-  text-align: center;
-  font-size: 12px;
-  opacity: 0.65;
 }
 
 /* ============ 页面容器 ============ */

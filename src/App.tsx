@@ -34,7 +34,9 @@ export default function App() {
   // 全局暗黑态：同步到 <html class="dark">，前后台共用同一套 .dark 样式
   useEffect(() => {
     document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
-  }, [resolvedTheme]);
+    // 主色同步为 CSS 变量，供 Sider 渐变等自定义样式使用
+    document.documentElement.style.setProperty('--brand', colorPrimary);
+  }, [resolvedTheme, colorPrimary]);
 
   return (
     <ConfigProvider
@@ -42,6 +44,19 @@ export default function App() {
       theme={{
         algorithm: resolvedTheme === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: { colorPrimary, borderRadius: 6 },
+        components: {
+          // Sider/Header 底色交给全局 CSS（跟随主色渐变），这里先置透明
+          Layout: {
+            siderBg: 'transparent',
+            headerBg: 'transparent',
+            headerColor: 'inherit',
+          },
+          Menu: {
+            darkItemBg: 'transparent',
+            darkSubMenuItemBg: 'transparent',
+            darkItemSelectedBg: colorPrimary,
+          },
+        },
       }}
     >
       <AntdApp>

@@ -11,7 +11,7 @@ import AppHeader from './AppHeader';
 import AppSider from './AppSider';
 import { useAppStore } from '@/store/useAppStore';
 
-const { Content, Footer } = Layout;
+const { Content } = Layout;
 
 export default function BasicLayout() {
   const location = useLocation();
@@ -29,7 +29,6 @@ export default function BasicLayout() {
         <Content className="app-content">
           <Outlet />
         </Content>
-        <Footer className="app-footer">React 19 + antd 6 + Vite 8 · 数据由 BasicApi 提供</Footer>
       </Layout>
     </Layout>
   );
