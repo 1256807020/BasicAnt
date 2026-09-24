@@ -22,7 +22,7 @@ import {
   ToolOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Layout, Menu, Typography, type MenuProps } from 'antd';
+import { Layout, Menu, type MenuProps } from 'antd';
 import { menuConfig, type IconName, type MenuNode } from '@/config/menu';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -88,9 +88,8 @@ export default function AppSider() {
   return (
     <Sider collapsible collapsed={collapsed} trigger={null} width={220} className="app-sider">
       <div className="app-logo">
-        <Typography.Text strong style={{ color: '#fff', fontSize: collapsed ? 14 : 18 }}>
-          {collapsed ? 'RA' : 'ReactAdmin'}
-        </Typography.Text>
+        <span className="sider-logo-mark">R</span>
+        {!collapsed && <span className="sider-logo-name">ReactAdmin</span>}
       </div>
       <Menu
         theme="dark"

@@ -56,6 +56,30 @@ html.dark .app-sider {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
+}
+
+/* Sider 顶部的「R」标：登录页 brand-logo 的反色版（主色底上用白块 + 主色字） */
+.sider-logo-mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--brand, #1677ff);
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 22%);
+}
+
+.sider-logo-name {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
 }
 
 .app-header {
