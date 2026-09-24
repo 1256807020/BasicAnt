@@ -59,13 +59,13 @@
   );
 }
 
-/* 暗黑下左侧渐变整体压暗，避免与深色页面脱节 */
+/* 暗黑下左侧改为渐变黑（与蓝白/金橙的渐变风格一致，整体走黑） */
 .auth-page.dark .intro-bg {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--brand, #1677ff) 45%, #000) 0%,
-    color-mix(in srgb, var(--brand, #1677ff) 68%, #000) 52%,
-    color-mix(in srgb, var(--brand, #1677ff) 86%, #000) 100%
+    color-mix(in srgb, var(--brand, #1677ff) 16%, #000) 0%,
+    #0c0c0c 54%,
+    #000 100%
   );
 }
 
