@@ -39,6 +39,7 @@ import { useMemo, useState, type Key } from 'react';
 import { useDebounceFn, useRequest } from 'ahooks';
 import {
   assignRoleUsers,
+  assignUserRoles,
   createRole,
   deleteRole,
   fetchPermissionTree,
@@ -272,7 +273,7 @@ export default function RoleListPage() {
   };
 
   /** 从角色移除用户：覆盖式改写该用户的 roleIds（无需专用后端接口） */
-  const removeUsersFromRole = async (userIds: Key[]) => {
+  const removeUsersFromRole = async (userIds: Array<string | number>) => {
     if (!userTarget || userIds.length === 0) return;
     setUserOperating(true);
     try {
@@ -640,7 +641,7 @@ export default function RoleListPage() {
           {selectedRowKeys.length > 0 && (
             <Popconfirm
               title={`确认将选中的 ${selectedRowKeys.length} 个用户移出此角色？`}
-              onConfirm={() => removeUsersFromRole(selectedRowKeys)}
+              onConfirm={() => removeUsersFromRole(selectedRowKeys as Array<string | number>)}
             >
               <Button danger loading={userOperating}>
                 批量移除（{selectedRowKeys.length}）

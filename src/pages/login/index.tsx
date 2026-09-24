@@ -21,6 +21,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import Lenis from 'lenis';
+import { Lottie } from 'lottie-react';
 import { login, register } from '@/api/rbac';
 import { useAppStore } from '@/store/useAppStore';
 import MotionButton from '@/components/MotionButton';
@@ -69,7 +70,13 @@ export default function LoginPage() {
 
       // 入场时间线
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-      tl.from('.intro-badge', { y: 24, autoAlpha: 0, duration: 0.6 })
+      tl.from('.intro-lottie', {
+        scale: 0.55,
+        autoAlpha: 0,
+        duration: 0.9,
+        ease: 'back.out(1.5)',
+      })
+        .from('.intro-badge', { y: 24, autoAlpha: 0, duration: 0.6 }, '-=0.5')
         .from('.intro-title .line', { y: 40, autoAlpha: 0, duration: 0.8, stagger: 0.12 }, '-=0.25')
         .from('.intro-desc', { y: 20, autoAlpha: 0, duration: 0.6 }, '-=0.4')
         .from('.intro-feature', { x: -24, autoAlpha: 0, duration: 0.5, stagger: 0.1 }, '-=0.3')
@@ -94,6 +101,8 @@ export default function LoginPage() {
         ease: 'sine.inOut',
       });
       gsap.to('.blob-3', { y: -22, duration: 7, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+      // Lottie 装饰：极缓慢浮动，与光斑节奏错开，避免整体同步显得机械
+      gsap.to('.intro-lottie', { y: -18, duration: 8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
 
       // 鼠标视差
       const onMove = (e: MouseEvent) => {
@@ -179,6 +188,10 @@ export default function LoginPage() {
         <div className="blob blob-1" />
         <div className="blob blob-2" />
         <div className="blob blob-3" />
+        {/* 品牌装饰动画：Lottie（仅在有滚动/视差的介绍区作为氛围点缀，不参与布局） */}
+        <div className="intro-lottie" aria-hidden>
+          <Lottie src="/lottie/hero.json" loop autoplay />
+        </div>
         <div className="intro-content">
           <span className="intro-badge">✨ React 19 · Ant Design 6</span>
           <h1 className="intro-title">
