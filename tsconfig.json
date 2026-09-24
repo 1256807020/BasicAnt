@@ -1,0 +1,26 @@
+{
+  "files": [],
+  /*
+   * 兜底 compilerOptions：
+   * 本文件是 solution-style 配置（自身不编译任何文件），但 IDE 的 TS 语言服务
+   * 在未正确加载 project references 时会 fallback 到这里的配置。
+   * 缺少这段时，src/*.tsx 会被当成「无归属文件」用默认配置检查，
+   * 默认 moduleResolution 解析不了 antd 6（该包无 exports 字段，
+   * 仅靠 typings/main 入口），从而误报「找不到模块 antd」。
+   * 这里显式声明与 tsconfig.app.json 一致的解析方式即可消除误报。
+   */
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
+}
