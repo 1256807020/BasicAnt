@@ -11,8 +11,6 @@
 import {
   AppstoreOutlined,
   LockOutlined,
-  MailOutlined,
-  MobileOutlined,
   SafetyCertificateOutlined,
   ThunderboltOutlined,
   UserOutlined,
@@ -40,8 +38,6 @@ interface RegisterFormValues {
   password: string;
   confirmPassword: string;
   nickname?: string;
-  email?: string;
-  phone?: string;
 }
 
 const FEATURES = [
@@ -154,8 +150,6 @@ export default function LoginPage() {
         username: values.username,
         password: values.password,
         nickname: values.nickname,
-        email: values.email,
-        phone: values.phone,
       });
       message.success('注册成功，请登录');
       setActiveTab('login');
@@ -283,12 +277,6 @@ export default function LoginPage() {
                 ]}
               >
                 <Input.Password prefix={<LockOutlined />} placeholder="确认密码" />
-              </Form.Item>
-              <Form.Item name="email" rules={[{ type: 'email', message: '邮箱格式不正确' }]}>
-                <Input prefix={<MailOutlined />} placeholder="邮箱（选填）" />
-              </Form.Item>
-              <Form.Item name="phone">
-                <Input prefix={<MobileOutlined />} placeholder="手机号（选填）" />
               </Form.Item>
               <MotionButton type="primary" htmlType="submit" block loading={submitting}>
                 注册
