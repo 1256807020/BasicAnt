@@ -64,3 +64,9 @@ export interface TableItem extends BaseRecord {
   title: string;
   content?: string;
 }
+
+/** 标签（动手练示例模块） */
+export interface TagItem extends BaseRecord {
+  name: string;
+  remark?: string;
+}

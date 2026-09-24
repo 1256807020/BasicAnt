@@ -81,7 +81,7 @@ export default function DashboardPage() {
 
   return (
     <div className="page-container">
-      <Space direction="vertical" size={0}>
+      <Space orientation="vertical" size={0}>
         <Typography.Title level={4} style={{ margin: 0 }}>
           数据总览
         </Typography.Title>
@@ -95,7 +95,11 @@ export default function DashboardPage() {
         {statCards.map((card) => (
           <Col key={card.title} xs={24} sm={12} xl={6}>
             <Card loading={loading}>
-              <Statistic title={card.title} value={card.value} valueStyle={{ color: card.color }} />
+              <Statistic
+                title={card.title}
+                value={card.value}
+                styles={{ content: { color: card.color } }}
+              />
             </Card>
           </Col>
         ))}

@@ -61,6 +61,7 @@ export const menuConfig: MenuNode[] = [
     children: [
       { key: '/content/article', label: '文章管理', icon: 'article', code: 'content:post' },
       { key: '/content/notice', label: '通知公告', icon: 'notice', code: 'content:notice' },
+      { key: '/content/tag', label: '标签管理', icon: 'notice', code: 'content:tag' },
     ],
   },
   {

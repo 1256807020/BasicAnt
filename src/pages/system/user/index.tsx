@@ -470,7 +470,7 @@ export default function UserListPage() {
           </Tooltip>
         }
       >
-        <Space direction="vertical" style={{ width: '100%' }}>
+        <Space orientation="vertical" style={{ width: '100%' }}>
           <Typography.Text type="secondary">
             勾选该用户拥有的角色，一个用户可拥有多个角色。
           </Typography.Text>

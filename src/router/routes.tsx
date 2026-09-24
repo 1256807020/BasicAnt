@@ -36,6 +36,7 @@ const ConfigList = lazy(() => import('@/pages/system/config'));
 // 内容管理
 const ArticleList = lazy(() => import('@/pages/content/article'));
 const NoticeList = lazy(() => import('@/pages/content/notice'));
+const TagList = lazy(() => import('@/pages/content/tag'));
 
 // 数据管理
 const DataTable = lazy(() => import('@/pages/data/table'));
@@ -61,6 +62,7 @@ export const routeConfig: RouteConfig[] = [
       { path: 'system/config', component: ConfigList },
       { path: 'content/article', component: ArticleList },
       { path: 'content/notice', component: NoticeList },
+      { path: 'content/tag', component: TagList },
       { path: 'data/table', component: DataTable },
       { path: 'profile', component: Profile },
       { path: '*', component: NotFound },

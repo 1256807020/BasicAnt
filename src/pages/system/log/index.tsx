@@ -197,7 +197,11 @@ export default function LogPage() {
         {statItems.map((item) => (
           <Col key={item.key} xs={24} sm={12} xl={6}>
             <Card loading={overviewLoading}>
-              <Statistic title={item.title} value={item.value} valueStyle={{ color: item.color }} />
+              <Statistic
+                title={item.title}
+                value={item.value}
+                styles={{ content: { color: item.color } }}
+              />
             </Card>
           </Col>
         ))}
@@ -356,7 +360,7 @@ export default function LogPage() {
         destroyOnHidden
       >
         {current ? (
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
             <Descriptions column={1} size="small" bordered>
               <Descriptions.Item label="操作人">{current.username ?? '系统'}</Descriptions.Item>
               <Descriptions.Item label="模块">{current.module ?? '-'}</Descriptions.Item>

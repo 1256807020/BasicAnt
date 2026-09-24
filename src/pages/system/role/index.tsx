@@ -408,7 +408,7 @@ export default function RoleListPage() {
           </Tooltip>
         }
       >
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+        <Space orientation="vertical" style={{ width: '100%' }} size="middle">
           <Space>
             <Button size="small" onClick={() => setCheckedKeys(allPermKeys)}>
               全选
@@ -444,7 +444,7 @@ export default function RoleListPage() {
           </Tooltip>
         }
       >
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+        <Space orientation="vertical" style={{ width: '100%' }} size="middle">
           <Typography.Text type="secondary">
             勾选属于该角色的用户（保存为追加操作，不会移除用户已有的其它角色）。
           </Typography.Text>
