@@ -17,7 +17,7 @@ import {
   ThunderboltOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { App, Button, Form, Input, Tabs, Typography } from 'antd';
+import { App, Form, Input, Tabs, Typography } from 'antd';
 import { useRef, useState, type CSSProperties } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
@@ -26,6 +26,7 @@ import Lenis from 'lenis';
 import { login, register } from '@/api/rbac';
 import { useAppStore } from '@/store/useAppStore';
 import { THEME_PRESETS, resolvePreset } from '@/theme/presets';
+import MotionButton from '@/components/MotionButton';
 import './login.css';
 
 interface LoginFormValues {
@@ -252,9 +253,9 @@ export default function LoginPage() {
                   autoComplete="current-password"
                 />
               </Form.Item>
-              <Button type="primary" htmlType="submit" block loading={submitting}>
+              <MotionButton type="primary" htmlType="submit" block loading={submitting}>
                 登录
-              </Button>
+              </MotionButton>
             </Form>
           ) : (
             <Form<RegisterFormValues> size="large" onFinish={onRegister} autoComplete="off">
@@ -300,9 +301,9 @@ export default function LoginPage() {
               <Form.Item name="phone">
                 <Input prefix={<MobileOutlined />} placeholder="手机号（选填）" />
               </Form.Item>
-              <Button type="primary" htmlType="submit" block loading={submitting}>
+              <MotionButton type="primary" htmlType="submit" block loading={submitting}>
                 注册
-              </Button>
+              </MotionButton>
             </Form>
           )}
 
