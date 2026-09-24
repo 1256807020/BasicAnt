@@ -16,27 +16,21 @@ import { THEME_PRESETS } from '@/theme/presets';
 const OPTIONS: { key: ThemeKey; icon: ReactNode; label: string; swatch?: string }[] = [
   { key: 'system', icon: <DesktopOutlined />, label: '跟随系统' },
   {
-    key: 'blue-light',
+    key: 'light',
     icon: <SunOutlined />,
-    label: '蓝白主题',
+    label: '浅色主题',
     swatch: THEME_PRESETS[0].swatch,
   },
   {
-    key: 'blue-dark',
+    key: 'dark',
     icon: <MoonOutlined />,
-    label: '蓝白暗黑主题',
+    label: '暗黑主题',
     swatch: THEME_PRESETS[0].swatch,
   },
   {
-    key: 'gold-light',
+    key: 'gold',
     icon: <SunOutlined />,
     label: '金橙主题',
-    swatch: THEME_PRESETS[1].swatch,
-  },
-  {
-    key: 'gold-dark',
-    icon: <MoonOutlined />,
-    label: '金橙暗黑主题',
     swatch: THEME_PRESETS[1].swatch,
   },
 ];

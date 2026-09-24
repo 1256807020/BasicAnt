@@ -14,8 +14,8 @@ import type { UserInfo } from '@/types';
 import { clearToken, setToken } from '@/utils/auth';
 import { THEME_PRESETS } from '@/theme/presets';
 
-/** 主题键：跟随系统 + 四个完整主题（色系 × 深浅），同一时刻只激活一个 */
-export type ThemeKey = 'system' | 'blue-light' | 'blue-dark' | 'gold-light' | 'gold-dark';
+/** 主题键：跟随系统 + 浅色 / 暗黑（默认蓝）/ 金橙（浅色 + 橙色主色），同一时刻只激活一个 */
+export type ThemeKey = 'system' | 'light' | 'dark' | 'gold';
 /** 实际生效的深浅模式（供 ECharts 等消费） */
 export type ResolvedTheme = 'light' | 'dark';
 
@@ -33,13 +33,12 @@ export function resolveThemeKey(key: ThemeKey): { theme: ResolvedTheme; colorPri
       return prefersDark()
         ? { theme: 'dark', colorPrimary: blue }
         : { theme: 'light', colorPrimary: blue };
-    case 'blue-dark':
+    case 'dark':
       return { theme: 'dark', colorPrimary: blue };
-    case 'gold-light':
+    case 'gold':
+      // 金橙主题 = 浅色 + 橙色主色；按钮 / 表格选中行 / 分页等均由 colorPrimary 级联
       return { theme: 'light', colorPrimary: gold };
-    case 'gold-dark':
-      return { theme: 'dark', colorPrimary: gold };
-    case 'blue-light':
+    case 'light':
     default:
       return { theme: 'light', colorPrimary: blue };
   }
@@ -71,7 +70,7 @@ export const useAppStore = create<AppState>()(
       token: '',
       userInfo: null,
       collapsed: false,
-      themeKey: 'blue-light',
+      themeKey: 'light',
       theme: 'light',
       colorPrimary: THEME_PRESETS[0].color,
 
@@ -105,7 +104,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'reactadm_app',
       // 结构变更时递增：旧数据会被 migrate 重置，避免拿着半截 userInfo 渲染
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         token: state.token,
@@ -118,19 +117,25 @@ export const useAppStore = create<AppState>()(
       /** 旧版本数据（如没有 permissions 的 userInfo）直接丢弃，强制重新登录 */
       migrate: (persisted) => {
         const old = (persisted ?? {}) as Partial<AppState> & {
-          /** v3 及以前的主题偏好 */
+          /** v3 及以前的主题偏好（system/light/dark + 独立色板） */
           themeMode?: 'system' | 'light' | 'dark';
         };
-        // v3（themeMode + colorPrimary 两个维度）→ 合并为单一 themeKey
-        let themeKey: ThemeKey = 'blue-light';
-        if (old.themeKey) {
+        let themeKey: ThemeKey = 'light';
+        if (
+          old.themeKey === 'system' ||
+          old.themeKey === 'light' ||
+          old.themeKey === 'dark' ||
+          old.themeKey === 'gold'
+        ) {
           themeKey = old.themeKey;
         } else if (old.themeMode === 'system') {
           themeKey = 'system';
         } else if (old.theme === 'dark') {
-          themeKey = old.colorPrimary === THEME_PRESETS[1].color ? 'gold-dark' : 'blue-dark';
+          // 旧暗黑（无论原蓝白 / 金橙）统一归为暗黑主题
+          themeKey = 'dark';
         } else if (old.colorPrimary === THEME_PRESETS[1].color) {
-          themeKey = 'gold-light';
+          // 浅色 + 金橙 → 金橙主题
+          themeKey = 'gold';
         }
         return {
           token: '',
