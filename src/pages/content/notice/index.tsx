@@ -20,7 +20,6 @@ import {
   Space,
   Table,
   Tag,
-  Typography,
 } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
@@ -104,16 +103,13 @@ export default function NoticePage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        通知公告
-      </Typography.Title>
-
       <Card>
         <Space wrap style={{ marginBottom: 16 }}>
           <Input.Search
             allowClear
             placeholder="搜索标题 / 内容 / 发布人"
             style={{ width: 260 }}
+            onChange={(e) => setKeyword(e.target.value)}
             onSearch={setKeyword}
           />
           <Select

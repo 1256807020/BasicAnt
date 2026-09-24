@@ -99,7 +99,13 @@ export default function RoleListPage() {
   const [form] = Form.useForm<RoleFormValues>();
 
   const [keyword, setKeyword] = useState('');
-  const { data: roles, loading, refresh } = useRequest(() => fetchRoles({ keyword }));
+  const {
+    data: roles,
+    loading,
+    refresh,
+  } = useRequest(() => fetchRoles({ keyword }), {
+    refreshDeps: [keyword],
+  });
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RoleItem | null>(null);
@@ -218,10 +224,6 @@ export default function RoleListPage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        角色管理
-      </Typography.Title>
-
       <Card>
         <Space wrap style={{ marginBottom: 16 }}>
           <Input
@@ -229,7 +231,8 @@ export default function RoleListPage() {
             placeholder="搜索角色名称 / 编码"
             style={{ width: 240 }}
             suffix={<SearchOutlined />}
-            onPressEnter={(e) => setKeyword((e.target as HTMLInputElement).value)}
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
           />
           <Button icon={<ReloadOutlined />} onClick={refresh}>
             刷新

@@ -22,7 +22,6 @@ import {
   Space,
   Table,
   Tag,
-  Typography,
 } from 'antd';
 import { useState } from 'react';
 import { postApi } from '@/api';
@@ -105,16 +104,13 @@ export default function PostListPage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        岗位管理
-      </Typography.Title>
-
       <Card>
         <Space wrap style={{ marginBottom: 16 }}>
           <Input.Search
             allowClear
             placeholder="搜索岗位名称 / 编码"
             style={{ width: 240 }}
+            onChange={(e) => setKeyword(e.target.value)}
             onSearch={setKeyword}
           />
           <Button icon={<ReloadOutlined />} onClick={reload}>

@@ -23,7 +23,6 @@ import {
   Table,
   Tag,
   TreeSelect,
-  Typography,
 } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
@@ -285,16 +284,13 @@ export default function PermissionListPage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        权限管理
-      </Typography.Title>
-
       <Card>
         <Space wrap style={{ marginBottom: 16 }}>
           <Input.Search
             allowClear
             placeholder="搜索名称 / 权限码 / 路由"
             style={{ width: 240 }}
+            onChange={(e) => setKeyword(e.target.value)}
             onSearch={setKeyword}
           />
           <Select

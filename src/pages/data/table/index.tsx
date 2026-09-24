@@ -6,20 +6,7 @@
  */
 
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import {
-  App,
-  Button,
-  Card,
-  Col,
-  Form,
-  Input,
-  Modal,
-  Popconfirm,
-  Row,
-  Space,
-  Table,
-  Typography,
-} from 'antd';
+import { App, Button, Card, Col, Form, Input, Modal, Popconfirm, Row, Space, Table } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { tableApi } from '@/api';
@@ -88,16 +75,13 @@ export default function DataTablePage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        通用数据
-      </Typography.Title>
-
       <Card>
         <Space wrap style={{ marginBottom: 16 }}>
           <Input.Search
             allowClear
             placeholder="搜索标题 / 内容"
             style={{ width: 260 }}
+            onChange={(e) => setKeyword(e.target.value)}
             onSearch={setKeyword}
           />
           <Button icon={<ReloadOutlined />} onClick={reload}>

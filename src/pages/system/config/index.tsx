@@ -22,7 +22,6 @@ import {
   Space,
   Table,
   Tag,
-  Typography,
 } from 'antd';
 import { useState } from 'react';
 import { configApi } from '@/api';
@@ -92,16 +91,13 @@ export default function ConfigPage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        系统参数
-      </Typography.Title>
-
       <Card>
         <Space wrap style={{ marginBottom: 16 }}>
           <Input.Search
             allowClear
             placeholder="搜索参数名称 / 键名 / 备注"
             style={{ width: 260 }}
+            onChange={(e) => setKeyword(e.target.value)}
             onSearch={setKeyword}
           />
           <Button icon={<ReloadOutlined />} onClick={reload}>

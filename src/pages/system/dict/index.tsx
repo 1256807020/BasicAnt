@@ -237,16 +237,13 @@ export default function DictPage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        字典管理
-      </Typography.Title>
-
       <Card>
         <Space wrap style={{ marginBottom: 16 }}>
           <Input.Search
             allowClear
             placeholder="搜索字典名称 / 编码"
             style={{ width: 260 }}
+            onChange={(e) => search(e.target.value)}
             onSearch={search}
           />
           <Button icon={<ReloadOutlined />} onClick={refresh}>

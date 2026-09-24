@@ -334,10 +334,6 @@ export default function DeptListPage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        部门管理
-      </Typography.Title>
-
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={6}>
           {treePanel}
@@ -350,6 +346,7 @@ export default function DeptListPage() {
                 allowClear
                 placeholder="搜索部门 / 负责人 / 电话 / 邮箱"
                 style={{ width: 260 }}
+                onChange={(e) => setKeyword(e.target.value)}
                 onSearch={setKeyword}
               />
               <Button icon={<ReloadOutlined />} onClick={reload}>

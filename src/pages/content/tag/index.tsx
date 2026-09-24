@@ -7,7 +7,7 @@
  */
 
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import { App, Button, Card, Form, Input, Modal, Popconfirm, Space, Table, Typography } from 'antd';
+import { App, Button, Card, Form, Input, Modal, Popconfirm, Space, Table } from 'antd';
 import { useState } from 'react';
 import { tagApi } from '@/api';
 import Auth from '@/components/Auth';
@@ -75,16 +75,13 @@ export default function TagListPage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        标签管理
-      </Typography.Title>
-
       <Card>
         <Space wrap style={{ marginBottom: 16 }}>
           <Input.Search
             allowClear
             placeholder="搜索名称 / 备注"
             style={{ width: 260 }}
+            onChange={(e) => setKeyword(e.target.value)}
             onSearch={setKeyword}
           />
           <Button icon={<ReloadOutlined />} onClick={reload}>

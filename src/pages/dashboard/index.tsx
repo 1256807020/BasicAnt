@@ -4,7 +4,7 @@
  * 统计卡片 / 操作趋势 / 模块分布 / 最新用户，全部来自 BasicApi 真实数据。
  */
 
-import { Card, Col, Empty, Row, Space, Statistic, Table, Tag, Typography } from 'antd';
+import { Card, Col, Empty, Row, Statistic, Table, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import type { EChartsOption } from 'echarts';
@@ -81,15 +81,9 @@ export default function DashboardPage() {
 
   return (
     <div className="page-container">
-      <Space orientation="vertical" size={0}>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          数据总览
-        </Typography.Title>
-        <Typography.Text type="secondary">
-          欢迎回来，{userInfo?.nickname ?? '访客'} · 当前角色{' '}
-          {userInfo?.roleNames.join('、') || '-'}
-        </Typography.Text>
-      </Space>
+      <Typography.Text type="secondary">
+        欢迎回来，{userInfo?.nickname ?? '访客'} · 当前角色 {userInfo?.roleNames.join('、') || '-'}
+      </Typography.Text>
 
       <Row gutter={[16, 16]}>
         {statCards.map((card) => (

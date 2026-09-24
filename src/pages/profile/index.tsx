@@ -100,10 +100,6 @@ export default function ProfilePage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        个人中心
-      </Typography.Title>
-
       <Card>
         <Space size="large" align="center">
           <Avatar size={72} style={{ backgroundColor: '#1677ff', fontSize: 28 }}>

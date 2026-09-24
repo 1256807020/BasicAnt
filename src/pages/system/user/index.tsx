@@ -58,10 +58,15 @@ interface UserFormValues {
   status?: string;
 }
 
-/** 部门树 → antd Tree 数据 */
-const toTreeData = (nodes: DeptItem[]): TreeDataNode[] =>
+/**
+ * 部门树 → antd 数据：一份数据同时喂左侧 Tree（靠 key 匹配）
+ * 和表单 TreeSelect（靠 value 匹配），所以 key/value 都要、且统一字符串。
+ * 缺 value 时 TreeSelect 匹配不上，会把裸 id 直接显示出来。
+ */
+const toTreeData = (nodes: DeptItem[]): (TreeDataNode & { value: string })[] =>
   nodes.map((node) => ({
     key: String(node.id),
+    value: String(node.id),
     title: node.name,
     children: node.children?.length ? toTreeData(node.children) : undefined,
   }));
@@ -73,10 +78,28 @@ export default function UserListPage() {
   const [deptId, setDeptId] = useState<string | number | undefined>(undefined);
   const [status, setStatus] = useState<string | undefined>(undefined);
 
-  const { list, total, loading, page, pageSize, setPage, setPageSize, setKeyword, reload } =
-    useCrudList<UserItem>((params) => fetchUsers({ ...params, deptId, status }), {
-      keywordFields: 'username,nickname,email,phone',
-    });
+  const {
+    list,
+    total,
+    loading,
+    page,
+    pageSize,
+    keyword,
+    setPage,
+    setPageSize,
+    setKeyword,
+    setFilters,
+    reload,
+  } = useCrudList<UserItem>((params) => fetchUsers(params), {
+    keywordFields: 'username,nickname,email,phone',
+  });
+
+  /**
+   * 部门/状态必须走 hook 的 filters（在 refreshDeps 里），变更即自动重查并回到第一页；
+   * 直接塞进 fetcher 闭包的话改了不会重新请求，只能手点「刷新」才生效。
+   */
+  const applyFilter = (nextDept: string | number | undefined, nextStatus?: string) =>
+    setFilters({ deptId: nextDept, status: nextStatus });
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<UserItem | null>(null);
@@ -116,6 +139,7 @@ export default function UserListPage() {
 
   const openEdit = (record: UserItem) => {
     setEditing(record);
+    form.resetFields();
     form.setFieldsValue({
       ...record,
       password: undefined,
@@ -191,17 +215,17 @@ export default function UserListPage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        用户管理
-      </Typography.Title>
-
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={5}>
           <Card title="组织架构" size="small">
             <Tree
               treeData={deptTreeData}
               selectedKeys={deptId !== undefined ? [String(deptId)] : []}
-              onSelect={(keys) => setDeptId(keys.length ? String(keys[0]) : undefined)}
+              onSelect={(keys) => {
+                const next = keys.length ? String(keys[0]) : undefined;
+                setDeptId(next);
+                applyFilter(next, status);
+              }}
               defaultExpandAll
             />
           </Card>
@@ -215,7 +239,8 @@ export default function UserListPage() {
                 placeholder="搜索用户名 / 昵称 / 邮箱 / 手机号"
                 style={{ width: 260 }}
                 suffix={<SearchOutlined />}
-                onPressEnter={(e) => setKeyword((e.target as HTMLInputElement).value)}
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
               />
               <Select
                 allowClear
@@ -225,7 +250,10 @@ export default function UserListPage() {
                   { label: '启用', value: '1' },
                   { label: '禁用', value: '0' },
                 ]}
-                onChange={(value) => setStatus(value)}
+                onChange={(value) => {
+                  setStatus(value);
+                  applyFilter(deptId, value);
+                }}
               />
               <Button icon={<ReloadOutlined />} onClick={reload}>
                 刷新
@@ -365,7 +393,6 @@ export default function UserListPage() {
         onCancel={() => setOpen(false)}
         onOk={submit}
         confirmLoading={submitting}
-        destroyOnHidden
         width={800}
         // 小屏时弹窗内容区可滚动，避免超出视口
         styles={{ body: { maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' } }}

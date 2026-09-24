@@ -189,10 +189,6 @@ export default function LogPage() {
 
   return (
     <div className="page-container">
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        审计日志
-      </Typography.Title>
-
       <Row gutter={[16, 16]}>
         {statItems.map((item) => (
           <Col key={item.key} xs={24} sm={12} xl={6}>
