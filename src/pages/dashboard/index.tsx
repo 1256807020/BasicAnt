@@ -125,7 +125,7 @@ export default function DashboardPage() {
       <Card title="最新用户">
         <Table<UserItem>
           rowKey="id"
-          size="middle"
+          size="medium"
           loading={loading}
           dataSource={users.slice(0, 5)}
           pagination={false}

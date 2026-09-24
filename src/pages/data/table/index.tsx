@@ -112,7 +112,7 @@ export default function DataTablePage() {
 
         <Table<TableItem>
           rowKey="id"
-          size="middle"
+          size="medium"
           loading={loading}
           dataSource={list}
           /* 有 fixed 列必须设置 scroll.x，否则固定列不生效 */

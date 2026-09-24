@@ -330,7 +330,7 @@ export default function PermissionListPage() {
 
         <Table<PermissionItem>
           rowKey="id"
-          size="middle"
+          size="medium"
           loading={treeRequest.loading}
           dataSource={dataSource}
           columns={columns}

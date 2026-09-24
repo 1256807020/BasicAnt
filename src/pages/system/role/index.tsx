@@ -399,7 +399,7 @@ export default function RoleListPage() {
         open={permDrawer}
         title={permTarget ? `给「${permTarget.name}」分配权限` : '分配权限'}
         onClose={() => setPermDrawer(false)}
-        width={520}
+        size={520}
         extra={
           <Tooltip title="保存">
             <Button type="primary" loading={permSaving} onClick={savePermissions}>
@@ -435,7 +435,7 @@ export default function RoleListPage() {
         open={userDrawer}
         title={userTarget ? `给「${userTarget.name}」分配用户` : '分配用户'}
         onClose={() => setUserDrawer(false)}
-        width={520}
+        size={520}
         extra={
           <Tooltip title="保存">
             <Button type="primary" loading={userSaving} onClick={saveUsers}>

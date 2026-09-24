@@ -365,7 +365,7 @@ export default function DeptListPage() {
             <Table<DeptItem>
               key={String(selectedId ?? 'all')}
               rowKey="id"
-              size="middle"
+              size="medium"
               loading={treeRequest.loading}
               dataSource={dataSource}
               columns={columns}

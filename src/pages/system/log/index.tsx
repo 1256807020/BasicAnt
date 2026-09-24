@@ -275,7 +275,7 @@ export default function LogPage() {
 
         <Table<LogItem>
           rowKey="id"
-          size="middle"
+          size="medium"
           loading={loading}
           dataSource={list}
           scroll={{ x: 1200 }}
@@ -355,28 +355,43 @@ export default function LogPage() {
       <Drawer
         open={!!current}
         title="日志详情"
-        width={560}
+        size={560}
         onClose={() => setCurrent(null)}
         destroyOnHidden
       >
         {current ? (
           <Space orientation="vertical" size={16} style={{ width: '100%' }}>
-            <Descriptions column={1} size="small" bordered>
-              <Descriptions.Item label="操作人">{current.username ?? '系统'}</Descriptions.Item>
-              <Descriptions.Item label="模块">{current.module ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label="动作">{current.action ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label="请求">
-                {current.method ? `${current.method} ${current.path ?? ''}` : (current.path ?? '-')}
-              </Descriptions.Item>
-              <Descriptions.Item label="IP">{current.ip ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label="状态码">{statusTag(current.statusCode)}</Descriptions.Item>
-              <Descriptions.Item label="耗时">
-                {current.cost === undefined ? '-' : `${current.cost} ms`}
-              </Descriptions.Item>
-              <Descriptions.Item label="时间">
-                {current.createdAt ? dayjs(current.createdAt).format('YYYY-MM-DD HH:mm:ss') : '-'}
-              </Descriptions.Item>
-            </Descriptions>
+            <Descriptions
+              column={1}
+              size="small"
+              bordered
+              items={[
+                { key: 'user', label: '操作人', children: current.username ?? '系统' },
+                { key: 'module', label: '模块', children: current.module ?? '-' },
+                { key: 'action', label: '动作', children: current.action ?? '-' },
+                {
+                  key: 'req',
+                  label: '请求',
+                  children: current.method
+                    ? `${current.method} ${current.path ?? ''}`
+                    : (current.path ?? '-'),
+                },
+                { key: 'ip', label: 'IP', children: current.ip ?? '-' },
+                { key: 'code', label: '状态码', children: statusTag(current.statusCode) },
+                {
+                  key: 'cost',
+                  label: '耗时',
+                  children: current.cost === undefined ? '-' : `${current.cost} ms`,
+                },
+                {
+                  key: 'time',
+                  label: '时间',
+                  children: current.createdAt
+                    ? dayjs(current.createdAt).format('YYYY-MM-DD HH:mm:ss')
+                    : '-',
+                },
+              ]}
+            />
 
             <div>
               <Typography.Text strong>详细信息</Typography.Text>

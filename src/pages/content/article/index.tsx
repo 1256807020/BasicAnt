@@ -171,7 +171,7 @@ export default function ArticlePage() {
 
         <Table<ArticleItem>
           rowKey="id"
-          size="middle"
+          size="medium"
           loading={loading}
           dataSource={list}
           /* 列较多，开启横向滚动；fixed 列必须配合 scroll.x 才会生效 */

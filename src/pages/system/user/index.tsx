@@ -461,7 +461,7 @@ export default function UserListPage() {
           roleTarget ? `给「${roleTarget.nickname ?? roleTarget.username}」分配角色` : '分配角色'
         }
         onClose={() => setRoleDrawer(false)}
-        width={420}
+        size={420}
         extra={
           <Tooltip title="保存">
             <Button type="primary" loading={roleSaving} onClick={saveRoles}>

@@ -99,7 +99,7 @@ export default function TagListPage() {
 
         <Table<TagItem>
           rowKey="id"
-          size="middle"
+          size="medium"
           loading={loading}
           dataSource={list}
           scroll={{ x: 700 }}

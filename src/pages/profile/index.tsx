@@ -124,29 +124,45 @@ export default function ProfilePage() {
 
         <Divider />
 
-        <Descriptions bordered column={2} size="middle">
-          <Descriptions.Item label="所属部门">{userInfo.deptName || '-'}</Descriptions.Item>
-          <Descriptions.Item label="岗位">-</Descriptions.Item>
-          <Descriptions.Item label="角色">
-            {userInfo.roleNames.map((name) => (
-              <Tag key={name} color="blue">
-                {name}
-              </Tag>
-            ))}
-          </Descriptions.Item>
-          <Descriptions.Item label="数据范围">
-            {DATA_SCOPE_TEXT[userInfo.dataScope] ?? userInfo.dataScope}
-          </Descriptions.Item>
-          <Descriptions.Item label="邮箱">{userInfo.email || '-'}</Descriptions.Item>
-          <Descriptions.Item label="手机号">{userInfo.phone || '-'}</Descriptions.Item>
-          <Descriptions.Item label="权限数量" span={2}>
-            <Tag color="green">{permissions.length} 项</Tag>
-            <Typography.Text type="secondary">
-              {permissions.slice(0, 6).join('、')}
-              {permissions.length > 6 ? ' …' : ''}
-            </Typography.Text>
-          </Descriptions.Item>
-        </Descriptions>
+        <Descriptions
+          bordered
+          column={2}
+          size="medium"
+          items={[
+            { key: 'dept', label: '所属部门', children: userInfo.deptName || '-' },
+            { key: 'post', label: '岗位', children: '-' },
+            {
+              key: 'role',
+              label: '角色',
+              children: userInfo.roleNames.map((name) => (
+                <Tag key={name} color="blue">
+                  {name}
+                </Tag>
+              )),
+            },
+            {
+              key: 'scope',
+              label: '数据范围',
+              children: DATA_SCOPE_TEXT[userInfo.dataScope] ?? userInfo.dataScope,
+            },
+            { key: 'email', label: '邮箱', children: userInfo.email || '-' },
+            { key: 'phone', label: '手机号', children: userInfo.phone || '-' },
+            {
+              key: 'perm',
+              label: '权限数量',
+              span: 2,
+              children: (
+                <>
+                  <Tag color="green">{permissions.length} 项</Tag>
+                  <Typography.Text type="secondary">
+                    {permissions.slice(0, 6).join('、')}
+                    {permissions.length > 6 ? ' …' : ''}
+                  </Typography.Text>
+                </>
+              ),
+            },
+          ]}
+        />
       </Card>
 
       <Row gutter={[16, 16]}>

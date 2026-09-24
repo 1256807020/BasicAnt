@@ -148,7 +148,7 @@ export default function NoticePage() {
 
         <Table<NoticeItem>
           rowKey="id"
-          size="middle"
+          size="medium"
           loading={loading}
           dataSource={list}
           /* 列较多，开启横向滚动；fixed 列必须配合 scroll.x 才会生效 */
@@ -221,7 +221,7 @@ export default function NoticePage() {
       <Drawer
         open={open}
         title={editing ? '编辑公告' : '新增公告'}
-        width={560}
+        size={560}
         onClose={() => setOpen(false)}
         destroyOnHidden
         extra={
