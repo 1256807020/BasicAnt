@@ -171,7 +171,6 @@ export default function LoginPage() {
     <div className="auth-page" ref={root} style={{ '--brand': colorPrimary } as CSSProperties}>
       {/* 主题切换 */}
       <div className="theme-switch">
-        <span className="theme-switch-label">主题</span>
         {THEME_PRESETS.map((p) => (
           <button
             key={p.key}
