@@ -4,8 +4,11 @@
  * 管理登录态（token + 含权限码的用户信息）、侧边栏折叠、主题。
  * 页面数据一律走接口，这里只存全局 UI 与身份信息。
  *
- * 主题为单一维度 themeKey（跟随系统 / 蓝白 / 蓝白暗黑 / 金橙 / 金橙暗黑），
- * 同一时刻只激活一个；theme + colorPrimary 由 themeKey 解析派生。
+ * 主题为单一维度 themeKey，同一时刻只激活一个：
+ *   - 跟随系统 / 浅色主题 / 暗黑主题：与官方 Ant Design 6 完全一致
+ *     （蓝色主色 #1677ff + 默认 / 暗黑算法），不引入任何自定义。
+ *   - 金橙主题：唯一自定义项——官方浅色算法 + 橙色主色 #f97316。
+ * theme + colorPrimary 由 themeKey 解析派生。
  */
 
 import { create } from 'zustand';
