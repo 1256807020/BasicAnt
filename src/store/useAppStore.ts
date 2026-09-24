@@ -3,16 +3,20 @@
  * --------------------------------------------------
  * 管理登录态（token + 含权限码的用户信息）、侧边栏折叠、主题。
  * 页面数据一律走接口，这里只存全局 UI 与身份信息。
+ *
+ * 主题为单一维度 themeKey（跟随系统 / 蓝白 / 蓝白暗黑 / 金橙 / 金橙暗黑），
+ * 同一时刻只激活一个；theme + colorPrimary 由 themeKey 解析派生。
  */
 
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import type { UserInfo } from '@/types';
 import { clearToken, setToken } from '@/utils/auth';
+import { THEME_PRESETS } from '@/theme/presets';
 
-/** 主题偏好：跟随系统 / 浅色 / 暗黑 */
-export type ThemeMode = 'system' | 'light' | 'dark';
-/** 实际生效的主题（themeMode 为 system 时由系统偏好解析得出） */
+/** 主题键：跟随系统 + 四个完整主题（色系 × 深浅），同一时刻只激活一个 */
+export type ThemeKey = 'system' | 'blue-light' | 'blue-dark' | 'gold-light' | 'gold-dark';
+/** 实际生效的深浅模式（供 ECharts 等消费） */
 export type ResolvedTheme = 'light' | 'dark';
 
 const prefersDark = () =>
@@ -20,26 +24,43 @@ const prefersDark = () =>
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-const resolveTheme = (mode: ThemeMode): ResolvedTheme =>
-  mode === 'system' ? (prefersDark() ? 'dark' : 'light') : mode;
+/** 将主题键解析为实际的深浅模式与主色 */
+export function resolveThemeKey(key: ThemeKey): { theme: ResolvedTheme; colorPrimary: string } {
+  const blue = THEME_PRESETS[0].color;
+  const gold = THEME_PRESETS[1].color;
+  switch (key) {
+    case 'system':
+      return prefersDark()
+        ? { theme: 'dark', colorPrimary: blue }
+        : { theme: 'light', colorPrimary: blue };
+    case 'blue-dark':
+      return { theme: 'dark', colorPrimary: blue };
+    case 'gold-light':
+      return { theme: 'light', colorPrimary: gold };
+    case 'gold-dark':
+      return { theme: 'dark', colorPrimary: gold };
+    case 'blue-light':
+    default:
+      return { theme: 'light', colorPrimary: blue };
+  }
+}
 
 interface AppState {
   token: string;
   /** 含 permissions / roleCodes / dataScope 的完整用户信息 */
   userInfo: UserInfo | null;
   collapsed: boolean;
-  /** 主题偏好（system / light / dark），持久化 */
-  themeMode: ThemeMode;
-  /** 实际生效主题：themeMode=system 时随系统深浅色变化 */
+  /** 当前激活的主题键（单一维度，持久化） */
+  themeKey: ThemeKey;
+  /** 实际生效主题：themeKey=system 时随系统深浅色变化 */
   theme: ResolvedTheme;
   colorPrimary: string;
   setAuth: (token: string, userInfo: UserInfo) => void;
   logout: () => void;
   toggleCollapsed: () => void;
-  setThemeMode: (mode: ThemeMode) => void;
-  /** 系统深浅色变化时同步（仅在 themeMode 为 system 时生效） */
+  setThemeKey: (key: ThemeKey) => void;
+  /** 系统深浅色变化时同步（仅在 themeKey 为 system 时生效） */
   syncSystemTheme: () => void;
-  setColorPrimary: (color: string) => void;
   /** 是否拥有某个权限码（超级管理员恒为 true） */
   hasPermission: (code?: string) => boolean;
 }
@@ -50,9 +71,9 @@ export const useAppStore = create<AppState>()(
       token: '',
       userInfo: null,
       collapsed: false,
-      themeMode: 'light',
+      themeKey: 'blue-light',
       theme: 'light',
-      colorPrimary: '#1677ff',
+      colorPrimary: THEME_PRESETS[0].color,
 
       setAuth: (token, userInfo) => {
         setToken(token);
@@ -66,13 +87,11 @@ export const useAppStore = create<AppState>()(
 
       toggleCollapsed: () => set((state) => ({ collapsed: !state.collapsed })),
 
-      setThemeMode: (themeMode) => set({ themeMode, theme: resolveTheme(themeMode) }),
+      setThemeKey: (themeKey) => set({ themeKey, ...resolveThemeKey(themeKey) }),
 
       syncSystemTheme: () => {
-        if (get().themeMode === 'system') set({ theme: resolveTheme('system') });
+        if (get().themeKey === 'system') set(resolveThemeKey('system'));
       },
-
-      setColorPrimary: (colorPrimary) => set({ colorPrimary }),
 
       hasPermission: (code) => {
         if (!code) return true;
@@ -86,27 +105,39 @@ export const useAppStore = create<AppState>()(
     {
       name: 'reactadm_app',
       // 结构变更时递增：旧数据会被 migrate 重置，避免拿着半截 userInfo 渲染
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         token: state.token,
         userInfo: state.userInfo,
         collapsed: state.collapsed,
-        themeMode: state.themeMode,
+        themeKey: state.themeKey,
         theme: state.theme,
         colorPrimary: state.colorPrimary,
       }),
       /** 旧版本数据（如没有 permissions 的 userInfo）直接丢弃，强制重新登录 */
       migrate: (persisted) => {
-        const old = (persisted ?? {}) as Partial<AppState>;
+        const old = (persisted ?? {}) as Partial<AppState> & {
+          /** v3 及以前的主题偏好 */
+          themeMode?: 'system' | 'light' | 'dark';
+        };
+        // v3（themeMode + colorPrimary 两个维度）→ 合并为单一 themeKey
+        let themeKey: ThemeKey = 'blue-light';
+        if (old.themeKey) {
+          themeKey = old.themeKey;
+        } else if (old.themeMode === 'system') {
+          themeKey = 'system';
+        } else if (old.theme === 'dark') {
+          themeKey = old.colorPrimary === THEME_PRESETS[1].color ? 'gold-dark' : 'blue-dark';
+        } else if (old.colorPrimary === THEME_PRESETS[1].color) {
+          themeKey = 'gold-light';
+        }
         return {
           token: '',
           userInfo: null,
           collapsed: false,
-          // v2 及以前只有 theme 字段，迁移为对应的固定偏好
-          themeMode: old.themeMode ?? (old.theme === 'dark' ? 'dark' : 'light'),
-          theme: old.theme === 'dark' ? 'dark' : 'light',
-          colorPrimary: '#1677ff',
+          themeKey,
+          ...resolveThemeKey(themeKey),
         };
       },
     },

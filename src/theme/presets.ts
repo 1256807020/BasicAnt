@@ -29,9 +29,3 @@ export const THEME_PRESETS: ThemePreset[] = [
     swatch: 'linear-gradient(135deg, #b45309, #f97316 55%, #fbbf24)',
   },
 ];
-
-/** 由当前 colorPrimary 反查预设（用于高亮当前选中的色板） */
-export function resolvePreset(color: string): ThemePreset {
-  const hex = (color ?? '').toLowerCase();
-  return THEME_PRESETS.find((p) => p.color.toLowerCase() === hex) ?? THEME_PRESETS[0];
-}
