@@ -39,6 +39,7 @@ export interface ArticleItem extends BaseRecord {
   category?: string;
   status?: 'published' | 'draft';
   views?: number;
+  content?: string;
 }
 
 /** 通知公告 */

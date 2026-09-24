@@ -134,7 +134,7 @@ export default function PostListPage() {
         </Space>
 
         <Table<PostItem>
-          rowKey="id"
+          rowKey={(record) => String(record.id)}
           loading={loading}
           dataSource={list}
           /* 列较多：开启横向滚动，fixed 列需配合 scroll.x 才生效 */

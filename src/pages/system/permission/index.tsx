@@ -325,7 +325,7 @@ export default function PermissionListPage() {
         </Space>
 
         <Table<PermissionItem>
-          rowKey="id"
+          rowKey={(record) => String(record.id)}
           size="medium"
           loading={treeRequest.loading}
           dataSource={dataSource}
@@ -375,6 +375,7 @@ export default function PermissionListPage() {
               <Form.Item
                 name="type"
                 label="类型"
+                tooltip="「接口」为预留类型：当前仅作分类存储，供后端接口级鉴权（Nest requirePerm）使用，前端不消费"
                 rules={[{ required: true, message: '请选择权限类型' }]}
               >
                 <Select

@@ -36,6 +36,7 @@ interface ArticleFormValues {
   category?: string;
   status?: ArticleItem['status'];
   views?: number;
+  content?: string;
 }
 
 export default function ArticlePage() {
@@ -171,7 +172,7 @@ export default function ArticlePage() {
           loading={loading}
           dataSource={list}
           /* 列较多，开启横向滚动；fixed 列必须配合 scroll.x 才会生效 */
-          scroll={{ x: 1100 }}
+          scroll={{ x: 1200 }}
           rowSelection={{
             selectedRowKeys: selectedKeys,
             onChange: (keys) => setSelectedKeys(keys.map(String)),
@@ -213,6 +214,13 @@ export default function ArticlePage() {
               dataIndex: 'views',
               width: 100,
               render: (value?: number) => value ?? 0,
+            },
+            {
+              title: '正文',
+              dataIndex: 'content',
+              width: 200,
+              ellipsis: true,
+              render: (value?: string) => value || '-',
             },
             {
               title: '更新时间',
@@ -293,6 +301,12 @@ export default function ArticlePage() {
             <Col xs={24} sm={12}>
               <Form.Item name="views" label="阅读量">
                 <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            {/* 正文：占满整行，支持多行输入；如需富文本可在后端支持后替换为编辑器 */}
+            <Col span={24}>
+              <Form.Item name="content" label="正文">
+                <Input.TextArea rows={8} placeholder="请输入文章正文" />
               </Form.Item>
             </Col>
           </Row>
