@@ -25,8 +25,9 @@ import { useGSAP } from '@gsap/react';
 import Lenis from 'lenis';
 import { login, register } from '@/api/rbac';
 import { useAppStore } from '@/store/useAppStore';
-import { THEME_PRESETS, resolvePreset } from '@/theme/presets';
 import MotionButton from '@/components/MotionButton';
+import LangSwitch from '@/components/LangSwitch';
+import ThemeSwitch from '@/components/ThemeSwitch';
 import './login.css';
 
 interface LoginFormValues {
@@ -56,10 +57,8 @@ export default function LoginPage() {
   const location = useLocation();
   const setAuth = useAppStore((state) => state.setAuth);
   const colorPrimary = useAppStore((state) => state.colorPrimary);
-  const setColorPrimary = useAppStore((state) => state.setColorPrimary);
   const { message } = App.useApp();
   const root = useRef<HTMLDivElement>(null);
-  const activeKey = resolvePreset(colorPrimary).key;
 
   useGSAP(
     () => {
@@ -169,19 +168,10 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page" ref={root} style={{ '--brand': colorPrimary } as CSSProperties}>
-      {/* 主题切换 */}
+      {/* 语言 / 主题切换（与 AppHeader 共用组件） */}
       <div className="theme-switch">
-        {THEME_PRESETS.map((p) => (
-          <button
-            key={p.key}
-            type="button"
-            className={`theme-dot${activeKey === p.key ? ' active' : ''}`}
-            style={{ background: p.swatch }}
-            title={p.label}
-            aria-label={p.label}
-            onClick={() => setColorPrimary(p.color)}
-          />
-        ))}
+        <LangSwitch />
+        <ThemeSwitch />
       </div>
 
       {/* 左侧介绍区 */}

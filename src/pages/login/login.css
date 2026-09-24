@@ -218,7 +218,7 @@
   margin-bottom: 8px;
 }
 
-/* ============ 主题切换 ============ */
+/* ============ 语言 / 主题切换 ============ */
 .theme-switch {
   position: fixed;
   top: 18px;
@@ -226,33 +226,12 @@
   z-index: 50;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 12px;
+  gap: 2px;
+  padding: 4px 6px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
-}
-
-.theme-dot {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: 50%;
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.theme-dot:hover {
-  transform: scale(1.1);
-}
-
-.theme-dot.active {
-  transform: scale(1.14);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
 /* ============ 响应式：窄屏隐藏介绍区 ============ */
