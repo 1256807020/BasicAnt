@@ -19,13 +19,11 @@ const OPTIONS: { key: ThemeKey; icon: ReactNode; label: string; swatch?: string 
     key: 'light',
     icon: <SunOutlined />,
     label: '浅色主题',
-    swatch: THEME_PRESETS[0].swatch,
   },
   {
     key: 'dark',
     icon: <MoonOutlined />,
     label: '暗黑主题',
-    swatch: THEME_PRESETS[0].swatch,
   },
   {
     key: 'gold',
