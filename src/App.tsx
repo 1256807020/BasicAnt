@@ -6,17 +6,25 @@
 
 import { App as AntdApp, ConfigProvider, theme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
+import enUS from 'antd/locale/en_US';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import 'dayjs/locale/zh-cn';
 import { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import GlobalNotifier from '@/components/GlobalNotifier';
 import AppRouter from '@/router/AppRouter';
 import { useAppStore } from '@/store/useAppStore';
+import NotificationInitializer from '@/components/NotificationInitializer';
 
 dayjs.locale('zh-cn');
 
 export default function App() {
+  const { i18n } = useTranslation();
+  // 跟随语言切换 antd 与 dayjs 本地化（UI 文案由 react-i18next 负责）
+  dayjs.locale(i18n.language === 'en-US' ? 'en' : 'zh-cn');
+  const antdLocale = i18n.language === 'en-US' ? enUS : zhCN;
+
   const themeKey = useAppStore((state) => state.themeKey);
   const resolvedTheme = useAppStore((state) => state.theme);
   const colorPrimary = useAppStore((state) => state.colorPrimary);
@@ -40,7 +48,7 @@ export default function App() {
 
   return (
     <ConfigProvider
-      locale={zhCN}
+      locale={antdLocale}
       theme={{
         algorithm: resolvedTheme === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: { colorPrimary, borderRadius: 6 },
@@ -61,6 +69,7 @@ export default function App() {
     >
       <AntdApp>
         <GlobalNotifier />
+        <NotificationInitializer />
         <BrowserRouter>
           <AppRouter />
         </BrowserRouter>

@@ -16,6 +16,7 @@ import axios, {
 import type { ResEnvelope } from '@/types';
 import { clearToken, getToken } from './auth';
 import { notify } from './notify';
+import { localizeMessage } from '@/i18n';
 
 export const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -35,13 +36,14 @@ request.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError<ResEnvelope>) => {
     const status = error.response?.status;
-    const message = error.response?.data?.msg || error.message || '网络异常，请稍后重试';
+    const code = error.response?.data?.code;
+    const fallback = error.response?.data?.msg || error.message || '网络异常，请稍后重试';
     // 未登录：以 HTTP 401 为唯一信号（BasicApi noLogin 返回 401，业务码 40001 随之返回）
     if (status === 401) {
       clearToken();
-      notify('error', '登录已失效，请重新登录');
+      notify('error', localizeMessage(401, '登录已失效，请重新登录'));
     } else {
-      notify('error', message);
+      notify('error', code != null ? localizeMessage(code, fallback) : fallback);
     }
     return Promise.reject(error);
   },
@@ -66,7 +68,7 @@ export async function http<T = unknown>(config: AxiosRequestConfig): Promise<Res
   const { data } = await request.request<ResEnvelope<T>>(config);
 
   if (data && typeof data === 'object' && 'code' in data && data.code !== 0) {
-    const message = data.msg || '请求失败';
+    const message = localizeMessage(data.code, data.msg || '请求失败');
     notify('error', message);
     throw new ApiError(data.code, message);
   }

@@ -1,35 +1,26 @@
 /**
- * LangSwitch — 语言切换（样式先行）
- * --------------------------------------------------
- * 仿 Ant Design 官网「中文 / English」切换按钮。
- * 当前仅做样式与交互占位，多语言能力后续接入 i18n 后替换。
+ * LangSwitch — 语言切换（已接入 react-i18next）
+ * 切换后同步 antd / dayjs 本地化，并持久化到 localStorage。
  */
 
 import { TranslationOutlined } from '@ant-design/icons';
-import { App, Button, Dropdown, Tooltip } from 'antd';
-import { useState } from 'react';
-
-const LANGS = [
-  { key: 'zh-CN', label: '中文' },
-  { key: 'en-US', label: 'English' },
-];
+import { Button, Dropdown, Tooltip } from 'antd';
+import { useTranslation } from 'react-i18next';
+import { SUPPORTED_LANGS, setLang, type LangKey } from '@/i18n';
 
 export default function LangSwitch() {
-  const [lang, setLang] = useState('zh-CN');
-  const { message } = App.useApp();
+  const { i18n } = useTranslation();
+  const current = i18n.language;
 
   return (
     <Dropdown
       trigger={['click']}
       placement="bottomRight"
       menu={{
-        items: LANGS.map((l) => ({ key: l.key, label: l.label })),
+        items: SUPPORTED_LANGS.map((l) => ({ key: l.key, label: l.label })),
         selectable: true,
-        selectedKeys: [lang],
-        onClick: ({ key }) => {
-          setLang(key);
-          if (key !== 'zh-CN') message.info('多语言能力规划中，敬请期待');
-        },
+        selectedKeys: [current],
+        onClick: ({ key }) => setLang(key as LangKey),
       }}
     >
       <Tooltip title="中文 / English">

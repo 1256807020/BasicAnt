@@ -71,3 +71,14 @@ export interface TagItem extends BaseRecord {
   name: string;
   remark?: string;
 }
+
+/** 站内信 / 通知（WebSocket 推送 + 持久化） */
+export interface NotificationItem extends BaseRecord {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  content: string | null;
+  read: boolean;
+  readAt: string | null;
+}

@@ -21,6 +21,8 @@ export default defineConfig({
       '/api': { target: API_TARGET, changeOrigin: true },
       // 图片服务
       '/img': { target: API_TARGET, changeOrigin: true },
+      // WebSocket：站内信实时推送（需 ws:true 转发升级请求）
+      '/ws': { target: API_TARGET, changeOrigin: true, ws: true },
     },
   },
   build: {

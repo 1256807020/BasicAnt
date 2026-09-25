@@ -14,6 +14,8 @@ import { titleMap } from '@/config/menu';
 import { useAppStore } from '@/store/useAppStore';
 import LangSwitch from '@/components/LangSwitch';
 import ThemeSwitch from '@/components/ThemeSwitch';
+import FullscreenButton from '@/components/FullscreenButton';
+import NotificationBell from '@/components/NotificationBell';
 
 const { Header } = Layout;
 
@@ -45,6 +47,8 @@ export default function AppHeader() {
       <Space size="middle">
         <LangSwitch />
         <ThemeSwitch />
+        <FullscreenButton />
+        <NotificationBell />
         <Dropdown
           menu={{
             items: [
