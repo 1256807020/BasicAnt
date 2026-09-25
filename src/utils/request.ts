@@ -38,10 +38,11 @@ request.interceptors.response.use(
     const status = error.response?.status;
     const code = error.response?.data?.code;
     const fallback = error.response?.data?.msg || error.message || '网络异常，请稍后重试';
-    // 未登录：以 HTTP 401 为唯一信号（后端 noLogin 返回 401，业务码 40001 随之返回）
+    // 未登录：以 HTTP 401 为唯一信号（清除登录态）；但错误文案直接采用后端 msg，
+    // 避免被 messages.401 的静态翻译覆盖（如「账号已被锁定…」「用户名或密码错误」等动态提示）
     if (status === 401) {
       clearToken();
-      notify('error', localizeMessage(401, '登录已失效，请重新登录'));
+      notify('error', error.response?.data?.msg || '登录已失效，请重新登录');
     } else {
       notify('error', code != null ? localizeMessage(code, fallback) : fallback);
     }

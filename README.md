@@ -59,7 +59,8 @@ cd ../../BasicNest && pnpm install && pnpm db:generate && pnpm db:migrate && pnp
 # 3) 启动前端（Vite 默认 5173，自动把 /api 代理到 1234）
 pnpm dev
 
-# 演示账号：admin / 123456（超级管理员）、zhangsan / 123456（部门经理）、lisi / 123456（普通用户）
+# 演示账号：admin / 123456（超级管理员）、zhangsan / 123456（部门经理）、lisi / 123456（普通用户）。
+# 更多交叉验证账号（如多角色并集 poly、无角色 guest、禁用 disabled1、自定义范围 customuser、仅本人 selfuser、空权限 emptyuser）见 BasicNest README「演示账号与交叉验证」章节，密码均为 123456。
 ```
 
 常用脚本：
@@ -260,7 +261,7 @@ hasPermission: (code) =>
 3. **路由级守卫** ✅ **已落地（2026-09-25）**：前端 `AppRouter` 新增 `RequirePerm` 守卫，按菜单级权限码（与 `menu.ts` 一致）拦截；无权限用户直访 URL 渲染 403 页（`Forbidden`），后端 `RequirePermGuard` 仍兜底接口 403。
 4. **权限变更实时生效** ✅ **已落地（2026-09-25）**：后端在「角色权限变更 / 用户-角色变更」时经 `EventEmitter2` 发 `permission.changed`，`NotificationsGateway` 向受影响用户 WS 推送 `permission_updated`；前端监听后调用 `refreshUserInfo()` 拉取最新 `/auth/me` 原地更新（免重登），菜单 / 按钮 / 路由立即生效。
 5. **权限树未按 type 过滤** ✅ **已自然解决**：种子权限节点仅含 `menu` / `button` 两类，**不存在 `api` 类型节点**，故分配树中无 api 混入问题；若未来引入 api 类节点，前端 Tree 可按 `type` 分开展示。
-6. **高级特性** 🔶 **规划中**：默认角色、数据权限模板、权限/角色继承、临时授权、IP/时间限制、TOTP MFA 等尚未实现（MFA 作为可插拔模块待后续迭代，见 §12.8）。
+6. **高级特性** 🔶 **部分落地**：**默认角色（注册自动授予）已落地**（后端 `DEFAULT_ROLE_ENABLED` / `DEFAULT_ROLE_CODE` env 开关，默认授予 `user` 角色）；数据权限模板、权限/角色继承、临时授权、IP/时间限制、TOTP MFA 等仍规划中（MFA 作为可插拔模块待后续迭代，见 §12.8）。
 
 ### 7.6 用户-角色关系：BasicNest 已修正的设计缺陷
 
@@ -567,7 +568,7 @@ src/
 | **P4 数据权限**  | `DataScopeInterceptor` 按 `dataScope` 注入查询条件                               | 非管理员只看授权范围                | §7.5-2         | 🔶 进行中                                              |
 | **P5 审计**      | `AuditInterceptor` 落 PG（操作人取自 JWT，脱敏，跳过自身）                       | 审计日志 DB 化                      | §7.4 升级      | ✅ 已落地                                              |
 | **P6 前端守卫**  | 路由守卫 + 权限变更实时刷新（WebSocket/事件总线）                                | 改权限无需重登                      | §7.5-3/4       | 🔶 部分（WebSocket 站内信已建，路由守卫/实时刷新待补） |
-| **P7 高级**      | 权限自注册（扫描 `@RequirePerm`）、默认角色、权限树 type 过滤、TOTP MFA、多租户  | 完整企业能力                        | §7.5-5/6、§7.8 | 🔶 进行中（MFA 暂未启用，见 §12.8）                    |
+| **P7 高级**      | 权限自注册（扫描 `@RequirePerm`）、默认角色、权限树 type 过滤、TOTP MFA、多租户  | 完整企业能力                        | §7.5-5/6、§7.8 | 🔶 进行中（默认角色已落地；MFA 暂未启用，见 §12.8）    |
 
 > 用户-角色对称端点已在 BasicNest 落地：角色侧 `GET/POST/DELETE /rbac/role/users?roleId`，用户侧 `GET/POST /rbac/users/roles`；废除 `user.roleIds` 单字段反查。前端「角色分配用户」走角色侧端点（见 §7.6）。
 
@@ -641,7 +642,7 @@ notices(id, title, content, type, status, publisher, ...)
 
 1. **密码哈希** ✅：已用 `bcryptjs` 3.x（早期基线为 `sha256`，存量密码需迁移，见 §12.6 坑 3）。
 2. **Refresh Token / 续期** ✅：双 token（access + refresh）+ Redis 失效名单。
-3. **登录限流 / 账号锁定** 🔶：`@nestjs/throttler` 全局限流已启用，失败计数锁定待增强。
+3. **登录限流 / 账号锁定** ✅：`@nestjs/throttler` 全局限流已启用；失败计数锁定已实现（连续错误密码超 `ACCOUNT_LOCK_MAX_ATTEMPTS` 后锁定 `ACCOUNT_LOCK_SECONDS`，Redis 不可达时自动降级不锁定；env `ACCOUNT_LOCK_ENABLED` 可关）。
 4. **验证码 / MFA** 🔶：图形验证码已落地；MFA 作为可插拔模块待 P7（见 §12.8）。
 5. **JWT 密钥** ✅：环境变量注入，可轮换。
 6. **退出失效** ✅：Redis 黑名单，登出 / 踢人即时失效。
@@ -656,7 +657,7 @@ notices(id, title, content, type, status, publisher, ...)
 5. **权限树 type 过滤**（§7.5-5）✅ **已自然解决**：种子权限节点仅含 `menu` / `button`，无 `api` 混入。
 6. **用户-角色对称端点**（§7.6）✅ **已落地**：`user_role` 关联表 + 对称端点 + 事务 + 级联。
 7. **行级 / 字段级权限** 🔶：CASL 式细粒度待 P7。
-8. **高级授权** 🔶：默认角色、权限/角色继承、临时授权、IP/时段限制（§7.5-6）规划中。
+8. **高级授权** 🔶：`默认角色` ✅ 已落地（注册自动授予，见 §13.2-3）；权限/角色继承、临时授权、IP/时段限制（§7.5-6）仍规划中。
 
 ### 13.4 数据层（Data）
 
