@@ -43,6 +43,7 @@ import {
 } from '@/api/rbac';
 import { postApi } from '@/api';
 import { useCrudList } from '@/hooks/useCrudList';
+import { ApiError } from '@/utils/request';
 import type { DeptItem, RoleItem, UserItem } from '@/types';
 import Auth from '@/components/Auth';
 
@@ -178,8 +179,16 @@ export default function UserListPage() {
       }
       setOpen(false);
       reload();
-    } catch {
-      // 统一提示已处理
+    } catch (e) {
+      // 全局已 toast 提示；若后端返回字段级错误（422 + errors），内联到表单对应字段
+      if (e instanceof ApiError && e.errors) {
+        form.setFields(
+          Object.entries(e.errors).map(([name, msg]) => ({
+            name: name as keyof UserFormValues,
+            errors: [msg],
+          })),
+        );
+      }
     } finally {
       setSubmitting(false);
     }

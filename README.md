@@ -145,7 +145,9 @@ index.html
 
 1. **baseURL**：`import.meta.env.VITE_API_BASE_URL || '/api'`，开发时由 Vite 代理到 BasicNest（`:1234`）。
 2. **请求拦截**：**仅**注入 `Authorization: Bearer <token>`。操作人身份由后端从 JWT 解析（`ctx.state.user`），**不再信任客户端自报**——早期版本曾写 `x-user-id` / `x-user-name` 头，现已移除（后端审计拦截器也以 JWT 为准，仅在缺失 token 时回退读该头，属兼容保留）。
-3. **响应拦截**：统一解包 `{ code, data, msg }`；`code !== 0` 自动提示并抛 `ApiError`；HTTP `401` 自动清理登录态。
+3. **响应拦截**：统一解包 `{ code, data, msg }`；`code !== 0` 自动提示并抛结构化 `ApiError`（携带 `errors?` / `status?`）。HTTP `401` 清理登录态并跳回 `/login`（并发 401 时提示去重，避免刷屏）；其余错误码只提示不登出。
+   - 业务错误优先展示**后端 `msg` 具体文案**（如「用户名已存在」「密码需包含字母」），不被前端通用翻译覆盖。
+   - 校验类错误（HTTP `422`）后端额外返回 `errors: { 字段: 提示 }`，表单可经 `form.setFields` 内联到对应字段（见 `pages/system/user` 的新增用户弹窗）。
 
 ```ts
 // 业务调用示例：拿到的直接是 data，无需自己拆信封
@@ -505,7 +507,7 @@ src/
 
 ### 12.4 契约对齐清单（前端零改动的硬性约束）
 
-**响应信封**（所有接口）：`{ code: 0, data, msg, total?, page?, pageSize?, totalPages? }`；失败 `code !== 0`；HTTP `401` = 登录失效。
+**响应信封**（所有接口）：`{ code: 0, data, msg, total?, page?, pageSize?, totalPages? }`；失败 `code !== 0`（`code` 与 HTTP 状态码一致），`data: null`，校验失败额外带 `errors?: { 字段: 提示 }`。HTTP `401` = 登录失效（前端清登录态并跳 `/login`）；`422` = 入参校验失败（前端读 `errors` 做字段内联）；`403` = 无权限；`409`/`400` = 业务冲突（如重名）。
 
 **通用 CRUD（`createCrudApi(resource)` 实测）**：
 
@@ -583,7 +585,7 @@ src/
 7. **`isAdmin` 短路依赖**：前端 `hasPermission`/`hasMenu` 对 `userInfo.isAdmin` 短路恒 true，`auth/me` 与 `login` 必须返回 `isAdmin`。
 8. **关联删除级联**：删角色须级联清理 `user_role`、`role_permission`；删权限须清理 `role_permission`；删部门须处理其子节点/用户归属，用 `ON DELETE CASCADE` 或应用层保证无孤儿。
 9. **`PATCH /user/:id` 不在 `/rbac` 前缀下**：前端 `updateProfile`/`updateUser` 走 `/user/:id`，Controller 路由务必与其一致，否则 404。
-10. **状态码语义**：前端仅在 HTTP `401` 清理登录态，其它错误码（403/400/500）只提示不登出。Nest 鉴权失败返回 **401**（未登录）与 **403**（无权限）要区分清楚。
+10. **状态码语义**：前端在 HTTP `401` 清理登录态并跳 `/login`（并发 401 提示去重）；其它错误码（403/400/409/422/500）只提示不登出。Nest 鉴权失败返回 **401**（未登录 / 令牌过期 / 无效，msg 已是中文友好提示）与 **403**（无权限）要区分清楚；入参校验失败返回 **422**（带 `errors` 字段级映射），与 400（语法/格式错误，如畸形 JSON）区分。
 
 ### 12.7 数据模型（PostgreSQL 表设计概要）
 

@@ -10,6 +10,8 @@ export interface ResEnvelope<T = unknown> {
   code: number;
   msg: string;
   data: T;
+  /** 字段级校验错误（422 时由后端返回：{ 字段名: 提示 }） */
+  errors?: Record<string, string>;
   total?: number;
   page?: number;
   pageSize?: number;
