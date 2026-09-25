@@ -1,11 +1,11 @@
 # API 接口契约（前后端统一规范）
 
-> **用途**：本文件是「前端模板 ↔ 后端（BasicApi / 未来的 Nest 12.x）」的**单一事实来源**。
+> **用途**：本文件是「前端模板（BasicAnt）↔ 后端（BasicNest，Nest 12.x）」的**单一事实来源**。
 > 所有后端实现（含 Nest 12.x 重写）都必须遵守这里的响应格式、错误码、路径与鉴权约定，
 > 前端 `src/utils/request.ts` + `src/api/*` 已严格按此实现，可对照验证。
 >
-> **现状**：当前对接的 BasicApi（默认 `http://127.0.0.1:1234`）已 100% 符合本契约，
-> 可直接联调；Nest 12.x 上线时按此复刻即可零改动切换。
+> **现状**：当前对接的 BasicNest（默认 `http://127.0.0.1:1234`）已 100% 符合本契约，
+> 可直接联调；BasicNest 已按此实现，零改动切换。
 
 ---
 
@@ -63,7 +63,7 @@
 
 ## 4. 鉴权
 
-- **token 为后端签发的 HS256 JWT**（零依赖，BasicApi `utils/jwt.js`）；登录接口返回的 `data.token` 即 JWT 字符串（三段式：`header.payload.signature`）。
+- **token 为后端签发的 HS256 JWT**（BasicNest `@nestjs/jwt`）；登录接口返回的 `data.token` 即 JWT 字符串（三段式：`header.payload.signature`）。
 - **请求头**：`Authorization: Bearer <token>`；后端 `authGuard` 中间件校验签名与有效期，缺 / 过期 / 篡改一律返回 401。
 - **禁止客户端自报身份**：审计所需的「操作人」由后端从已校验的 JWT（`uid` / `username`）解析，不再读取前端传入的 `x-user-id` / `x-user-name`（防身份伪造）。
 - token 前端存于 `localStorage`，由 `utils/auth.ts` 管理；JWT 无状态，过期后由后端返 401 触发前端重新登录（`/tools/jwt/*` 仅用于本地调试签发/校验，不参与鉴权）。

@@ -17,7 +17,7 @@ export default defineConfig({
     host: true,
     open: true,
     proxy: {
-      // 后端 BasicApi：/api/xxx -> http://127.0.0.1:1234/api/xxx
+      // 后端 BasicNest：/api/xxx -> http://127.0.0.1:1234/api/xxx
       '/api': { target: API_TARGET, changeOrigin: true },
       // 图片服务
       '/img': { target: API_TARGET, changeOrigin: true },

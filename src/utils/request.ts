@@ -1,5 +1,5 @@
 /**
- * request.ts — axios 封装（对齐 BasicApi 响应规范）
+ * request.ts — axios 封装（对齐 BasicNest 响应规范）
  * --------------------------------------------------
  * 1. 统一 baseURL / 超时 / 请求头
  * 2. 请求拦截器自动注入 token
@@ -38,7 +38,7 @@ request.interceptors.response.use(
     const status = error.response?.status;
     const code = error.response?.data?.code;
     const fallback = error.response?.data?.msg || error.message || '网络异常，请稍后重试';
-    // 未登录：以 HTTP 401 为唯一信号（BasicApi noLogin 返回 401，业务码 40001 随之返回）
+    // 未登录：以 HTTP 401 为唯一信号（后端 noLogin 返回 401，业务码 40001 随之返回）
     if (status === 401) {
       clearToken();
       notify('error', localizeMessage(401, '登录已失效，请重新登录'));

@@ -1,7 +1,7 @@
 /**
  * rbac.ts — RBAC 权限模型类型定义
  * --------------------------------------------------
- * 与 BasicApi 的 /api/rbac/* 接口一一对应。
+ * 与 BasicNest 的 /api/rbac/* 接口一一对应。
  * 后端已完成「内存 JOIN」，所以前端拿到的对象里
  * deptName / postName / roleNames / permissionIds 都是现成的。
  */

@@ -1,7 +1,7 @@
 /**
  * 仪表盘 — 数据总览
  * --------------------------------------------------
- * 统计卡片 / 操作趋势 / 模块分布 / 最新用户，全部来自 BasicApi 真实数据。
+ * 统计卡片 / 操作趋势 / 模块分布 / 最新用户，全部来自 BasicNest 真实数据。
  */
 
 import { Card, Col, Empty, Row, Statistic, Table, Tag, Typography } from 'antd';

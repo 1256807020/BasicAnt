@@ -1,5 +1,5 @@
 /**
- * crud.ts — 通用 CRUD 工厂（对接 BasicApi 的 /api/:resource 规范）
+ * crud.ts — 通用 CRUD 工厂（对接 BasicNest 的 /api/:resource 规范）
  * --------------------------------------------------
  * 一个 createCrudApi(resource) 即得到 list / detail / create / update / remove / batchRemove / count，
  * 新增业务集合只需要一行代码。
