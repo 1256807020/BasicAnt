@@ -7,7 +7,7 @@
 
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { App, Button, Card, Col, Form, Input, Modal, Popconfirm, Row, Space, Table } from 'antd';
-import dayjs from 'dayjs';
+import { formatUtc } from '@/utils/time';
 import { useState } from 'react';
 import { tableApi } from '@/api';
 import Auth from '@/components/Auth';
@@ -124,7 +124,7 @@ export default function DataTablePage() {
               title: '更新时间',
               dataIndex: 'updatedAt',
               width: 170,
-              render: (value?: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-'),
+              render: (value?: string) => formatUtc(value),
             },
             {
               title: '操作',

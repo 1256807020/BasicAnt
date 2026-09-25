@@ -5,7 +5,7 @@
  */
 
 import { Card, Col, Empty, Row, Statistic, Table, Tag, Typography } from 'antd';
-import dayjs from 'dayjs';
+import { formatUtc } from '@/utils/time';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
@@ -225,7 +225,7 @@ export default function DashboardPage() {
             {
               title: '创建时间',
               dataIndex: 'createdAt',
-              render: (v?: string) => (v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-'),
+              render: (v?: string) => formatUtc(v),
             },
           ]}
         />

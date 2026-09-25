@@ -21,7 +21,7 @@ import {
   Table,
   Tag,
 } from 'antd';
-import dayjs from 'dayjs';
+import { formatUtc } from '@/utils/time';
 import { useState } from 'react';
 import { noticeApi } from '@/api';
 import Auth from '@/components/Auth';
@@ -186,7 +186,7 @@ export default function NoticePage() {
               title: '创建时间',
               dataIndex: 'createdAt',
               width: 170,
-              render: (value?: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-'),
+              render: (value?: string) => formatUtc(value),
             },
             {
               title: '操作',

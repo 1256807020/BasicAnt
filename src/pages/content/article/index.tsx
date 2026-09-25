@@ -22,7 +22,7 @@ import {
   Table,
   Tag,
 } from 'antd';
-import dayjs from 'dayjs';
+import { formatUtc } from '@/utils/time';
 import { useState } from 'react';
 import { articleApi } from '@/api';
 import Auth from '@/components/Auth';
@@ -226,7 +226,7 @@ export default function ArticlePage() {
               title: '更新时间',
               dataIndex: 'updatedAt',
               width: 170,
-              render: (value?: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-'),
+              render: (value?: string) => formatUtc(value),
             },
             {
               title: '操作',

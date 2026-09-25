@@ -27,6 +27,7 @@ import {
   Typography,
 } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
+import { formatUtc } from '@/utils/time';
 import { useMemo, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import { useRequest } from 'ahooks';
@@ -330,8 +331,7 @@ export default function LogPage() {
               title: '时间',
               dataIndex: 'createdAt',
               width: 170,
-              render: (value?: string) =>
-                value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-',
+              render: (value?: string) => formatUtc(value, 'YYYY-MM-DD HH:mm:ss'),
             },
             {
               title: '操作',
@@ -382,9 +382,7 @@ export default function LogPage() {
                 {
                   key: 'time',
                   label: '时间',
-                  children: current.createdAt
-                    ? dayjs(current.createdAt).format('YYYY-MM-DD HH:mm:ss')
-                    : '-',
+                  children: formatUtc(current.createdAt, 'YYYY-MM-DD HH:mm:ss'),
                 },
               ]}
             />

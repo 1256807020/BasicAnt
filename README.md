@@ -1,7 +1,7 @@
 # ReactAdmin — React 19 + antd 6 中后台管理系统
 
 > 一套「干净、可直接运行、易扩展」的国内主流 React 中后台框架基线。
-> 后端对接 [`BasicApi`](../../BasicApi)（文件型 JSON 快速接口，端口 `1234`），遵循统一的 `{ code, data, msg }` 响应契约。
+> 默认对接 **[`BasicNest`](../../BasicNest)**（Nest.js 12 + Prisma 7 企业级 RBAC 基座，端口 `1234`），遵循统一的 `{ code, data, msg }` 响应契约；亦可退回 [`BasicApi`](../../BasicApi)（文件型 JSON 快速接口）做纯前端本地联调。切换后端只改一个 `baseURL`（`VITE_API_TARGET`）。
 
 ---
 
@@ -52,8 +52,9 @@
 # 1) 安装依赖
 pnpm install
 
-# 2) 启动后端 BasicApi（默认 1234 端口，独立仓库）
-cd ../../BasicApi && npm start
+# 2) 启动后端 BasicNest（默认 1234 端口，独立仓库）
+cd ../../BasicNest && pnpm install && pnpm db:generate && pnpm db:migrate && pnpm seed && pnpm start
+#    （仅做纯前端本地联调可改用 BasicApi：cd ../../BasicApi && npm start）
 
 # 3) 启动前端（Vite 默认 5173，自动把 /api 代理到 1234）
 pnpm dev
@@ -72,10 +73,10 @@ pnpm dev
 
 环境变量（可选，均有默认值）：
 
-| 变量                | 默认                    | 说明                                 |
-| ------------------- | ----------------------- | ------------------------------------ |
-| `VITE_API_BASE_URL` | `/api`                  | 请求基址；生产环境可指向真实后端域名 |
-| `VITE_API_TARGET`   | `http://127.0.0.1:1234` | 开发代理目标（BasicApi）             |
+| 变量                | 默认                    | 说明                                         |
+| ------------------- | ----------------------- | -------------------------------------------- |
+| `VITE_API_BASE_URL` | `/api`                  | 请求基址；生产环境可指向真实后端域名         |
+| `VITE_API_TARGET`   | `http://127.0.0.1:1234` | 开发代理目标（BasicNest，亦可指向 BasicApi） |
 
 ---
 
@@ -179,13 +180,15 @@ const { list, total } = await fetchUsers({ page: 1, pageSize: 10 });
 
 ---
 
-## 六、接口约定（BasicApi）
+## 六、接口约定（BasicNest）
 
 - 基础地址：`/api`（开发代理到 `http://127.0.0.1:1234`）
 - 成功响应：`{ code: 0, data, msg, total?, page?, pageSize?, totalPages? }`
 - 列表查询参数：`page` `pageSize` `keyword` `keywordFields` `sort` `order` `tree`
-- 通用 CRUD：`GET /:resource`、`POST /:resource`、`PATCH /:resource/:id`、`DELETE /:resource/:id`、`POST /:resource/batch-delete`
-- RBAC 层：`/api/rbac/*`（登录 / 用户 / 角色 / 权限 / 部门 / 字典 / 日志，后端做内存 JOIN 后返回聚合结果）
+- 通用 CRUD：`GET /:resource`、`POST /:resource`、`PATCH /:resource/:id`、`DELETE /:resource/:id`、`POST /:resource/batch-delete`、`GET /:resource/_count`
+- RBAC 层：`/api/rbac/*`（登录 / 用户 / 角色 / 权限 / 部门 / 字典 / 日志等，后端在 Prisma 层 JOIN 聚合后返回结果）
+
+> **核心原则（家族约定）**：接口契约一旦定型，后续切换后端（BasicApi ↔ BasicNest）**前端只改一个 `baseURL`** 即可，业务代码零改动。BasicNest 完全复用了 BasicApi 的响应信封、查询参数与 CRUD 路由形状。
 
 > **核心原则（家族约定）**：接口契约一旦在 BasicApi 定型，后续换成 Nest / CMS 生产后端时，**前端只改一个 `baseURL`** 即可切换，业务代码零改动。
 
@@ -306,9 +309,9 @@ const userCount = users.filter((u) => toIdList(u.roleIds).some((id) => same(id, 
 
 ### 7.7 架构定位（为什么这么划分）
 
-- **BasicApi（当前后端）**：文件型 JSON 快速 CRUD 服务，定位是「前端演示 / 联调」，只保证接口调通、功能可用，**不追求企业级安全闭环**。最初的目标本就是「一个 JSON 实现全套 CRUD（增删改查 + 查询分页）」，在此之上堆企业级标准并不现实。
-- **Nest.js 12.x（企业级后端，规划中）**：将在独立服务中按 **7.5** 的规格完整实现接口鉴权、数据权限、审计留痕、多租户等。
-- **前端零改动切换**：因「契约一旦定型、切换后端只改一个 `baseURL`」的家族约定（`src/utils/request.ts`），届时业务页面代码无需改动，仅 BasicApi → Nest 后端迁移。
+- **BasicApi（本地快速基线）**：文件型 JSON 快速 CRUD 服务，定位是「纯前端本地联调」，只保证接口调通、功能可用，**不追求企业级安全闭环**。适合在没有数据库环境时快速跑通前端页面。
+- **BasicNest（实际企业级后端，已落地）**：Nest.js 12 + Prisma 7 + PostgreSQL + Redis 的独立服务，已在 [`../BasicNest`](../../BasicNest) 实现，按 **7.5 / 7.6** 的规格补齐了接口鉴权、数据权限、审计留痕等企业能力（部分高级能力见 §12.5 路线图状态）。**联调与演示默认走它**。
+- **前端零改动切换**：因「契约一旦定型、切换后端只改一个 `baseURL`」的家族约定（`src/utils/request.ts`），BasicApi ↔ BasicNest 之间切换业务页面代码无需改动。
 
 ### 7.8 权限节点的来源（Nest.js 12.x 规格）
 
@@ -439,7 +442,22 @@ import Auth from '@/components/Auth';
 
 ### 11.3 测试结论
 
-当前 BasicApi 快速接口下，核心 CRUD 模块与 RBAC 链路均可用，满足演示 / 联调目标。企业级缺口（接口级鉴权、数据权限、路由守卫、权限实时刷新、type 过滤、用户-角色对称端点等）按 §7.5、§7.6 规格待 Nest.js 12.x 补齐，届时前端仅切换 `baseURL`、业务代码零改动。
+- **BasicApi 快速基线**：核心 CRUD 模块与 RBAC 链路均可用，满足纯前端本地联调目标。
+- **BasicNest 企业级后端（已联调）**：后端 25 个单元测试 + 1 个 e2e 测试全绿（`pnpm test` / `pnpm test:e2e`）；`tag` / `table` 等通用 CRUD 模块经 curl 全链路验证（增删改查 / 分页 / 批量删除 / 字段校验 / 401 鉴权均符合信封契约）。前端仅切换 `baseURL` 即可对接，业务代码零改动。
+
+### 11.4 BasicNest 联调修复记录（2026-09-25）
+
+联调中发现并修复的前后端口径不一致（以 BasicNest 实际代码为准）：
+
+| 问题          | 前端原调用                       | BasicNest 实际路由                 | 处置                                                 |
+| ------------- | -------------------------------- | ---------------------------------- | ---------------------------------------------------- |
+| 用户-角色分配 | `POST /rbac/user/roles`          | `POST /rbac/users/roles`           | 前端 `rbac.ts` 改为复数 `users`                      |
+| 查询用户角色  | `GET /rbac/user/roles`           | `GET /rbac/users/roles`            | 同上                                                 |
+| 重置密码      | `POST /rbac/user/reset-password` | `POST /rbac/users/reset-password`  | 改为复数 `users`                                     |
+| 改用户状态    | `POST /rbac/user/status`         | `POST /rbac/users/status`          | 改为复数 `users`                                     |
+| 初始化数据    | `POST /rbac/seed`                | 无 HTTP 端点（走 `pnpm seed` CLI） | 保留前端函数，实际经 Prisma CLI 初始化，不依赖该接口 |
+
+> 上述 4 条单数路由若不改，会导致用户管理/角色管理页的「分配角色、重置密码、改状态」静默 404；现已对齐到 BasicNest 真实路由（详见 §12.4 契约清单）。
 
 ---
 
@@ -450,30 +468,32 @@ import Auth from '@/components/Auth';
 
 ### 12.1 总体原则
 
-1. **契约优先**：Nest 端必须复用 BasicApi 的响应信封、查询参数、CRUD 路由、RBAC 路由（见 §12.4），否则前端无法零改动切换。
-2. **安全闭环**：在 BasicApi 基础上补齐 §7.5 的 6 项企业能力（接口鉴权 / 数据权限 / 路由守卫 / 实时刷新 / type 过滤 / 高级特性）。
-3. **数据模型重构**：废除 `user.roleIds` 单字段反查（§7.6），改用关联表；审计日志、字典、部门等保持原实体语义。
+> 本章原是「BasicApi → 生产级后端的开发规格」，现已落地为 **BasicNest**（`../BasicNest`，Nest.js 12 + Prisma 7）。下文既是设计约束，也是 BasicNest 的当前实现对照（以代码为准，详见 §12.5 路线图状态）。
+
+1. **契约优先**：BasicNest 复用 BasicApi 的响应信封、查询参数、CRUD 路由、RBAC 路由（见 §12.4），前端零改动切换。
+2. **安全闭环**：在 BasicApi 基础上补齐 §7.5 的企业能力（接口鉴权 / 数据权限 / 路由守卫 / 实时刷新 / type 过滤 / 高级特性）。
+3. **数据模型重构**：废除 `user.roleIds` 单字段反查（§7.6），改用 `user_role` / `role_permission` 关联表；审计日志、字典、部门等保持原实体语义（见 §12.7）。
 4. **可审计**：所有写操作留痕（操作人取自 JWT，不信任客户端），敏感字段脱敏。
 
 ### 12.2 技术栈选型
 
-| 类别          | 选型                                                | 用途                                                  | 备注                                                      |
-| ------------- | --------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------- |
-| 框架          | NestJS 12.x（platform-express）                     | 控制器 / 服务 / 模块 / 守卫 / 拦截器                  | 用其「约定优于配置」的企业骨架                            |
-| 语言          | TypeScript 6.x                                      | 类型安全                                              | 与前端同源                                                |
-| 数据库        | PostgreSQL 18.x                                     | 主存储                                                | JSON 文件 → PG 表迁移                                     |
-| ORM           | `@nestjs/typeorm` + TypeORM（或 Prisma）            | 实体 / 关联 / 查询构造                                | 推荐 TypeORM，事务与 QueryBuilder 成熟；可用 Prisma 替代  |
-| 缓存 / 中间件 | Redis 8.x（ioredis）                                | 缓存信封、限流计数、Session/RefreshToken、BullMQ 队列 | 单实例即可支撑演示 + 中小生产                             |
-| 认证          | `@nestjs/jwt` + `@nestjs/passport` + `passport-jwt` | JWT 签发与校验                                        | 替换 BasicApi 自研 jwt 工具                               |
-| 密码          | `bcrypt`                                            | 密码哈希                                              | **替换** BasicApi 的 `sha256`（见 §12.6 坑 3）            |
-| 校验          | `class-validator` / `class-transformer`             | DTO 校验（全局 `ValidationPipe`）                     | 注意 `whitelist:false` 兼容 `operator` 字段（§12.6 坑 1） |
-| 配置          | `@nestjs/config`                                    | 环境变量                                              | 替代 BasicApi `config.js`                                 |
-| 文档          | `@nestjs/swagger`                                   | 接口自文档                                            | 企业标配                                                  |
-| 限流          | `@nestjs/throttler`                                 | 接口级速率限制                                        | 防爆破                                                    |
-| 缓存          | `@nestjs/cache-manager` + ioredis store             | 列表/字典缓存                                         |                                                           |
-| 队列（可选）  | `@nestjs/bullmq`（Redis）                           | 异步任务 / 通知 / 导入导出                            | 非必须，按需                                              |
-| 安全          | `helmet` + `cors`                                   | 安全头 / 跨域                                         | 替代 BasicApi 手写 cors 中间件                            |
-| 授权（可选）  | `@casl/ability`                                     | 行级/字段级能力计算                                   | 与 `@RequirePerm` 互补                                    |
+| 类别          | 选型                                                       | 用途                                                                                | 备注                                                           |
+| ------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 框架          | NestJS 12.x（platform-express）                            | 控制器 / 服务 / 模块 / 守卫 / 拦截器                                                | 用其「约定优于配置」的企业骨架                                 |
+| 语言          | TypeScript 6.x                                             | 类型安全                                                                            | 与前端同源                                                     |
+| 数据库        | PostgreSQL 18.x                                            | 主存储                                                                              | JSON 文件 → PG 表迁移                                          |
+| ORM           | **Prisma 7.10**（`@prisma/client` + `@prisma/adapter-pg`） | 实体 / 关联 / 查询构造                                                              | **实际采用 Prisma**（非 TypeORM）；事务用 `$transaction`       |
+| 缓存 / 中间件 | Redis 8.x（ioredis）                                       | 缓存信封、限流计数、Session/RefreshToken、BullMQ 队列                               | 单实例即可支撑演示 + 中小生产                                  |
+| 认证          | `@nestjs/jwt` + `@nestjs/passport` + `passport-jwt`        | JWT 签发与校验                                                                      | 替换 BasicApi 自研 jwt 工具                                    |
+| 密码          | **`bcryptjs` 3.x**                                         | 密码哈希                                                                            | **替换** BasicApi 的 `sha256`（见 §12.6 坑 3）                 |
+| 校验          | **`zod` 4.x Standard Schema**                              | DTO 校验（`StandardSchemaValidationPipe` + `@Body({schema})` / `@Query({schema})`） | 替代 class-validator；响应整形用 `@SerializeOptions({schema})` |
+| 配置          | `@nestjs/config`                                           | 环境变量                                                                            | 替代 BasicApi `config.js`                                      |
+| 文档          | `@nestjs/swagger`                                          | 接口自文档                                                                          | 企业标配                                                       |
+| 限流          | `@nestjs/throttler`                                        | 接口级速率限制                                                                      | 防爆破                                                         |
+| 缓存          | `@nestjs/cache-manager` + ioredis store                    | 列表/字典缓存                                                                       |                                                                |
+| 队列（可选）  | `@nestjs/bullmq`（Redis）                                  | 异步任务 / 通知 / 导入导出                                                          | 非必须，按需                                                   |
+| 安全          | `helmet` + `cors`                                          | 安全头 / 跨域                                                                       | 替代 BasicApi 手写 cors 中间件                                 |
+| 授权（可选）  | `@casl/ability`                                            | 行级/字段级能力计算                                                                 | 与 `@RequirePerm` 互补                                         |
 
 > 前端无关项（PostgreSQL / Redis）由后端独立部署，不影响 `baseURL` 契约。
 
@@ -528,54 +548,65 @@ src/
 | GET    | `/:resource/_count`       | 返回 `{ total }`                                                 |
 | GET    | `/_health`                | 健康检查                                                         |
 
-**RBAC 路由（`/rbac` 前缀，来自 `src/api/rbac.ts`）**：
+**RBAC 路由（`/rbac` 前缀，以 BasicNest OpenAPI 实际路由为准）**：
 
-| 方法            | 路径                                                 | 备注                                              |
-| --------------- | ---------------------------------------------------- | ------------------------------------------------- |
-| POST            | `/rbac/auth/login` `/register` `/password` `/logout` | login 返回 `{ token, userInfo }`                  |
-| GET             | `/rbac/auth/me?userId`                               |                                                   |
-| GET             | `/rbac/users`                                        | 支持 `keyword,deptId,roleId,status,page,pageSize` |
-| POST            | `/rbac/user/roles`                                   | `{userId, roleIds}` 覆盖式                        |
-| GET             | `/rbac/user/roles?userId`                            | 返回 `string[]`                                   |
-| POST            | `/rbac/user/reset-password` `/user/status`           |                                                   |
-| PATCH           | `/user/:id`                                          | 改用户字段（走通用路由，无 /rbac 前缀！）         |
-| GET             | `/rbac/roles`（`?pageSize=500`） `/roles/all`        | 角色列表                                          |
-| POST/PUT/DELETE | `/rbac/roles` `/rbac/roles/:id`                      |                                                   |
-| GET/POST        | `/rbac/role/permissions?roleId`                      | 返回 `string[]` / `{roleId,permissionIds}`        |
-| GET/POST        | `/rbac/role/users?roleId`                            | 返回 UserItem[] / `{roleId,userIds}`              |
-| GET             | `/rbac/permissions?tree=1`                           | 权限树                                            |
-| CRUD            | `/rbac/permissions...`                               |                                                   |
-| GET             | `/rbac/depts?tree=1` `/depts/all`                    | 部门树                                            |
-| CRUD            | `/rbac/depts...`                                     |                                                   |
-| GET             | `/rbac/dicts` `/dict/:code/items`                    | 字典                                              |
-| CRUD            | `/rbac/dicts...` `/dict/items...`                    |                                                   |
-| GET             | `/rbac/logs` `/logs/overview`                        | 审计日志                                          |
-| DELETE          | `/rbac/logs?confirm=1`                               |                                                   |
-| POST            | `/rbac/seed?confirm=1`                               | 初始化数据                                        |
+> 注意：用户侧关联接口在 BasicNest 中是**复数** `/rbac/users/roles`、`/rbac/users/reset-password`、`/rbac/users/status`（非 BasicApi 时代的单数 `/user/...`），前端 `src/api/rbac.ts` 已对齐。
+
+| 方法            | 路径                                                       | 备注                                                                   |
+| --------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------- |
+| POST            | `/rbac/auth/login` `/register` `/password` `/logout`       | login 返回 `{ token, userInfo, accessToken, refreshToken, expiresIn }` |
+| POST            | `/rbac/auth/refresh` `/forgot` `/reset`                    | 令牌续期 / 找回 / 重置（扩展）                                         |
+| GET             | `/rbac/auth/captcha`                                       | 图形验证码（扩展）                                                     |
+| GET             | `/rbac/auth/me`                                            | 当前用户聚合信息                                                       |
+| PATCH           | `/rbac/auth/profile`                                       | 改个人资料（扩展）                                                     |
+| PATCH/DELETE    | `/user/:id`                                                | 改/删用户（走通用路由，无 /rbac 前缀！）                               |
+| GET             | `/rbac/users`                                              | 支持 `keyword,deptId,roleId,status,page,pageSize`                      |
+| GET,POST        | `/rbac/users/roles`                                        | `{userId, roleIds}` 覆盖式；GET 返回 `string[]`                        |
+| POST            | `/rbac/users/reset-password` `/users/status`               | 重置密码 / 改状态                                                      |
+| POST            | `/rbac/users/batch-delete`                                 | 批量删用户                                                             |
+| GET/POST        | `/rbac/users/export` `/users/import`                       | 用户导入导出（扩展）                                                   |
+| GET             | `/rbac/roles`（`?pageSize=500`） `/roles/all`              | 角色列表                                                               |
+| POST/PUT/DELETE | `/rbac/roles` `/rbac/roles/:id`                            |                                                                        |
+| GET/POST/DELETE | `/rbac/role/users?roleId`                                  | 角色下用户（对称端点已具备 DELETE）                                    |
+| GET/POST        | `/rbac/role/permissions?roleId`                            | 返回 `string[]` / `{roleId,permissionIds}`                             |
+| POST            | `/rbac/role/depts`                                         | 角色-部门数据范围（扩展）                                              |
+| GET             | `/rbac/permissions?tree=1`                                 | 权限树                                                                 |
+| CRUD            | `/rbac/permissions` `/rbac/permissions/:id`                |                                                                        |
+| GET             | `/rbac/depts?tree=1` `/depts/all`                          | 部门树                                                                 |
+| CRUD            | `/rbac/depts` `/rbac/depts/:id`                            | 注意更新是 `PUT`（非 PATCH）                                           |
+| GET             | `/rbac/dicts` `/dict/:code/items`                          | 字典类型 / 数据项                                                      |
+| CRUD            | `/rbac/dicts` `/dicts/:id` `/dict/items` `/dict/items/:id` |                                                                        |
+| GET,DELETE      | `/rbac/logs` `/logs/overview`                              | 审计日志列表 / 概览；DELETE `?confirm=1` 清空                          |
+| GET             | `/rbac/online`                                             | 在线用户（扩展）                                                       |
+| POST            | `/rbac/online/kick`                                        | 踢下线（扩展）                                                         |
+| GET,POST        | `/rbac/notifications`                                      | 站内信（WebSocket 实时推送，扩展模块）                                 |
+| POST            | `/rbac/upload`                                             | 文件上传（扩展）                                                       |
+
+> **初始化数据**：不设 HTTP `/rbac/seed` 端点，需在 BasicNest 侧执行 `pnpm seed`（Prisma seed 脚本）初始化 RBAC 基线数据，再启动服务。
 
 > **前端兼容性提醒**：RBAC 的写请求体里附带了 `operator: currentUsername()`（从 localStorage 读取），Nest 端应**忽略该字段、以 JWT 解析的操作人为准**（§12.6 坑 1）。
 
-### 12.5 分阶段实施路线
+### 12.5 分阶段实施路线（BasicNest 落地状态）
 
-| 阶段             | 目标                                                                             | 交付                                | 对应缺口       |
-| ---------------- | -------------------------------------------------------------------------------- | ----------------------------------- | -------------- |
-| **P0 脚手架**    | Nest 工程 + PG/Redis 连接 + 全局信封/异常/校验/分页 + 从 BasicApi JSON 迁移脚本  | 列表/详情/分页可用                  | 基础契约       |
-| **P1 认证**      | JWT 签发 + `bcrypt` + `JwtAuthGuard` + `auth/me`                                 | 登录换 JWT，沿用 `{token,userInfo}` | 登录态         |
-| **P2 RBAC 模型** | 实体 `user_role`/`role_permission` 关联表 + 聚合接口（替代 `user.roleIds` 反查） | 用户-角色对称端点，废除单字段       | §7.6           |
-| **P3 接口鉴权**  | `RequirePermGuard` + `@RequirePerm` + 权限元数据                                 | 无权限 403，越权不可达              | §7.5-1         |
-| **P4 数据权限**  | `DataScopeInterceptor` 按 `dataScope` 注入查询条件                               | 非管理员只看授权范围                | §7.5-2         |
-| **P5 审计**      | `AuditInterceptor` 落 PG（操作人取自 JWT，脱敏，跳过自身）                       | 审计日志 DB 化                      | §7.4 升级      |
-| **P6 前端守卫**  | 路由守卫 + 权限变更实时刷新（WebSocket/事件总线）                                | 改权限无需重登                      | §7.5-3/4       |
-| **P7 高级**      | 权限自注册（扫描 `@RequirePerm`）、默认角色、权限树 type 过滤、多租户预留        | 完整企业能力                        | §7.5-5/6、§7.8 |
+| 阶段             | 目标                                                                             | 交付                                | 对应缺口       | 状态                                                   |
+| ---------------- | -------------------------------------------------------------------------------- | ----------------------------------- | -------------- | ------------------------------------------------------ |
+| **P0 脚手架**    | Nest 工程 + PG/Redis 连接 + 全局信封/异常/校验/分页 + 从 BasicApi JSON 迁移脚本  | 列表/详情/分页可用                  | 基础契约       | ✅ 已落地                                              |
+| **P1 认证**      | JWT 签发 + `bcryptjs` + `JwtAuthGuard` + `auth/me` + Refresh Token               | 登录换 JWT，沿用 `{token,userInfo}` | 登录态         | ✅ 已落地                                              |
+| **P2 RBAC 模型** | 实体 `user_role`/`role_permission` 关联表 + 聚合接口（替代 `user.roleIds` 反查） | 用户-角色对称端点，废除单字段       | §7.6           | ✅ 已落地                                              |
+| **P3 接口鉴权**  | `RequirePermGuard` 全局守卫 + `@RequirePerm` + 权限元数据                        | 无权限 403，越权不可达              | §7.5-1         | ✅ 已落地（骨架，按接口选择性挂 `@RequirePerm`）       |
+| **P4 数据权限**  | `DataScopeInterceptor` 按 `dataScope` 注入查询条件                               | 非管理员只看授权范围                | §7.5-2         | 🔶 进行中                                              |
+| **P5 审计**      | `AuditInterceptor` 落 PG（操作人取自 JWT，脱敏，跳过自身）                       | 审计日志 DB 化                      | §7.4 升级      | ✅ 已落地                                              |
+| **P6 前端守卫**  | 路由守卫 + 权限变更实时刷新（WebSocket/事件总线）                                | 改权限无需重登                      | §7.5-3/4       | 🔶 部分（WebSocket 站内信已建，路由守卫/实时刷新待补） |
+| **P7 高级**      | 权限自注册（扫描 `@RequirePerm`）、默认角色、权限树 type 过滤、TOTP MFA、多租户  | 完整企业能力                        | §7.5-5/6、§7.8 | 🔶 进行中（MFA 暂未启用，见 §12.8）                    |
 
-> 用户-角色关系务必在 **P2** 落地对称端点：`POST /rbac/roles/:id/users`（添加）、`DELETE /rbac/roles/:id/users`（移除，当前 BasicApi 缺此项）、`GET /rbac/roles/:id/users`、`GET /rbac/users/:id/roles`。前端「角色分配用户」抽屉届时改调 `DELETE` 端点即可大幅简化（见 §7.6.3）。
+> 用户-角色对称端点已在 BasicNest 落地：角色侧 `GET/POST/DELETE /rbac/role/users?roleId`，用户侧 `GET/POST /rbac/users/roles`；废除 BasicApi 时代的 `user.roleIds` 单字段反查。前端「角色分配用户」走角色侧端点即可（见 §7.6.3）。
 
 ### 12.6 Nest 开发注意事项 / 坑（结合本项目实测）
 
-1. **前端会发 `operator` 字段**：`src/api/rbac.ts` 在写请求体里带 `operator: currentUsername()`。用 `ValidationPipe` 时若开启 `whitelist:true` 会把未知字段剥离（无害），但务必**不要**因缺该字段而报错；更稳妥是用 DTO 忽略或 `whitelist:false`。Nest 应以 `request.user`（JWT）为操作人来源。
+1. **前端会发 `operator` 字段**：`src/api/rbac.ts` 在写请求体里带 `operator: currentUsername()`。BasicNest 用 `zod` Standard Schema 校验（非 class-validator），更新类 schema 已加 `.passthrough()` 容忍该字段，且**始终以 `request.user`（JWT）为操作人来源**，忽略 `operator`。
 2. **信封与 Nest 默认不同**：Nest 默认直接序列化返回值，需用 `TransformInterceptor` 包装成 `{ code:0, data, msg, ...分页 }`，且 `AllExceptionsFilter` 把异常也转成同信封（前端 `http()` 依赖 `code!==0` 判断）。分页字段名必须严格为 `total/page/pageSize/totalPages`（实测 `src/api/crud.ts` 读取这些键）。
-3. **密码哈希迁移**：BasicApi 用 `sha256(password)` 明文加盐式存储；Nest 改用 `bcrypt`。**存量用户密码是 sha256 哈希，bcrypt 无法反解**，迁移时需：① 强制首登改密，或 ② 迁移脚本对原哈希再做一次 bcrypt（`bcrypt(sha256(orig))`，登录时同样处理一次）过渡。不要直接把 sha256 串当明文塞进 bcrypt 比对。
-4. **`dataScope` 必须在查询构造阶段注入**：用 TypeORM `QueryBuilder` 按当前用户 `deptId` + `dataScope`（all/deptAndBelow/dept/self）拼接 `WHERE`，不能用内存过滤（否则分页 total 失真）。
+3. **密码哈希迁移**：BasicApi 用 `sha256(password)` 明文加盐式存储；BasicNest 改用 **`bcryptjs` 3.x**。**存量用户密码是 sha256 哈希，bcrypt 无法反解**，迁移时需：① 强制首登改密，或 ② 迁移脚本对原哈希再做一次 bcrypt（`bcrypt(sha256(orig))`，登录时同样处理一次）过渡。不要直接把 sha256 串当明文塞进 bcrypt 比对。
+4. **`dataScope` 必须在查询构造阶段注入**：用 Prisma `where` 按当前用户 `deptId` + `dataScope`（all/deptAndBelow/dept/self）拼接条件，不能用内存过滤（否则分页 total 失真）。关联查询优先用 Prisma 的 `include`/`relation` 聚合，避免 N+1。
 5. **审计拦截器要脱敏 + 防递归**：对 `password/oldPassword/newPassword/token` 字段打 `******`；跳过 `/logs`、`/seed`、`/auth/*` 自身写入，否则无限递归膨胀（BasicApi `app.js auditLogger` 已用 `SKIP` 列表规避，Nest 同样要处理）。
 6. **权限树回显只勾叶子、提交完整树**：前端 `saveRolePermissions` 提交「父+子完整 ID 列表」，后端覆盖式写入（先删后插）。Nest 端保持此语义，避免脏数据（见 §7.2）。
 7. **`isAdmin` 短路依赖**：前端 `hasPermission`/`hasMenu` 对 `userInfo.isAdmin` 短路恒 true，`auth/me` 与 `login` 必须返回 `isAdmin`（BasicApi `buildAuthPayload` 已返回，Nest 对齐）。
@@ -606,29 +637,35 @@ notices(id, title, content, type, status, publisher, ...)
 > 树形结构（`permissions`/`depts`）继续用 `parent_id` 自关联，前端 `?tree=1` 在后端递归聚合成树返回，契约不变。
 > 实体 ↔ BasicApi JSON 字段基本一一对应，迁移脚本可直接映射；`role_permission` 等关联表由原有 `user.roleIds` 反查结果反向填充。
 
+### 12.8 关于 TOTP / MFA 的决策（2026-09-25）
+
+- **当前结论：暂不启用 TOTP MFA。** 本期（联调阶段）以「接口鉴权（P3）/ 数据权限（P4）等安全闭环」为优先，MFA 属于 P7 高级特性，作为**可插拔模块**在后续迭代补齐（BasicAnt README §13.2 已将其列为待补缺口）。
+- **依赖已锁定为稳定版**：`package.json` 全部依赖锁定在稳定大版本（Prisma `7.10.0` 精确钉死，其余 caret 稳定版，已从 `devDependencies` 移除已废弃的 `@types/bcryptjs`，bcryptjs 3.x 自带类型）；`pnpm audit` 在 npmmirror 源无审计端点，故以「钉死版本 + latest 大版本不被自动安装」方式规避风险。
+- **依赖审计结论**：无已知事故版本；`Prisma 8.0.0-rc` 等 latest 预览版不会被 `package.json` 范围自动拉入，构建可复现。
+
 ---
 
-> **交付判定**：当 Nest 端能跑通 §12.4 全部契约、且前端把 `VITE_API_BASE_URL` 指向它后所有页面（含你明天要写的「外链管理」示例）零改动可用，即达成「演示级 → 企业级」迁移。届时 BasicApi 可保留为「本地快速联调基线」，生产走 Nest。
+> **交付判定**：BasicNest 已实现 §12.4 全部契约，前端把 `VITE_API_TARGET` 指向它后所有页面（含 tag / table 示例模块）零改动可用，达成「演示级 → 企业级」迁移目标。BasicApi 保留为「本地纯前端快速联调基线」，生产 / 联调默认走 BasicNest。
 
 ---
 
 ## 十三、快速接口（BasicApi）vs 企业级基座：差距清单
 
-> 当前 BasicApi 是「文件型 JSON 快速接口」，定位演示/联调。下表逐维度列出**距离企业级开发基座还差什么**，对应 §7.5 / §7.6 / §12 的改造项。前端（BasicAnt）目前代码**零改动**即可对接未来 Nest 后端（只切 `baseURL`）。
+> 下表逐维度对比 **BasicApi（本地快速基线）** 与 **BasicNest（已落地的企业级基座，Nest 12 + Prisma 7）** 的差距。BasicNest 已闭合其中大部分缺口（对照 §12.5 路线图状态），仅 P4 数据权限、P6 前端守卫、P7 高级特性等仍在进行。前端（BasicAnt）对两者均**零改动**切换（只切 `baseURL`）。
 
 ### 13.1 总览
 
-| 维度     | 当前（BasicApi）              | 企业级基座（待建）                            |
-| -------- | ----------------------------- | --------------------------------------------- |
-| 存储     | JSON 文件（单线程、全量读写） | PostgreSQL 18（关系型、事务、索引）           |
-| 认证     | sha256 + 自研 JWT，无续期     | bcrypt/Argon2 + Refresh Token + 服务端失效    |
-| 授权     | 仅登录态校验，无接口级鉴权    | `@RequirePerm` 接口鉴权 + 数据权限 + 路由守卫 |
-| 关联模型 | `user.roleIds` 单字段反查     | `user_role` 关联表（对称、可事务）            |
-| 审计     | 基础动作留痕（无 diff）       | 完整留痕 + 变更前后对比 + 查询优化            |
-| 缓存     | 无                            | Redis（缓存/限流/会话/队列）                  |
-| 安全     | 无频控/无锁定                 | 限流 + 登录失败锁定 + 验证码/MFA              |
-| 多租户   | 无                            | 租户隔离（预留）                              |
-| 运维     | 仅文件日志                    | 监控/指标/健康检查细化/日志聚合               |
+| 维度     | BasicApi（本地基线）          | BasicNest（已落地企业基座）                         | 状态        |
+| -------- | ----------------------------- | --------------------------------------------------- | ----------- |
+| 存储     | JSON 文件（单线程、全量读写） | PostgreSQL 18（关系型、事务、索引）                 | ✅ 已闭合   |
+| 认证     | sha256 + 自研 JWT，无续期     | bcryptjs + JWT + Refresh Token（§12.6 坑 3）        | ✅ 已闭合   |
+| 授权     | 仅登录态校验，无接口级鉴权    | `RequirePermGuard` 接口鉴权 + 数据权限（P4 进行中） | 🔶 部分闭合 |
+| 关联模型 | `user.roleIds` 单字段反查     | `user_role` 关联表（对称、可事务）                  | ✅ 已闭合   |
+| 审计     | 基础动作留痕（无 diff）       | 完整留痕 + 脱敏 + 查询优化（PG）                    | ✅ 已闭合   |
+| 缓存     | 无                            | Redis（限流/会话/队列）                             | ✅ 已闭合   |
+| 安全     | 无频控/无锁定                 | 限流 + 验证码 + Refresh 失效（MFA 待 P7）           | 🔶 部分闭合 |
+| 多租户   | 无                            | 预留（P7）                                          | ⬜ 待补     |
+| 运维     | 仅文件日志                    | 监控/指标/健康检查 + Swagger 文档                   | ✅ 已闭合   |
 
 ### 13.2 认证与安全（Auth & Security）
 

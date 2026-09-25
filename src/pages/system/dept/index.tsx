@@ -27,7 +27,7 @@ import {
   TreeSelect,
   Typography,
 } from 'antd';
-import dayjs from 'dayjs';
+import { formatUtc } from '@/utils/time';
 import { useMemo, useState } from 'react';
 import { useRequest } from 'ahooks';
 import Auth from '@/components/Auth';
@@ -270,7 +270,7 @@ export default function DeptListPage() {
       title: '创建时间',
       dataIndex: 'createdAt',
       width: 180,
-      render: (value?: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-'),
+      render: (value?: string) => formatUtc(value),
     },
     {
       title: '操作',

@@ -1,7 +1,8 @@
 /**
  * rbac.ts — RBAC 权限接口
  * --------------------------------------------------
- * 所有关联（用户-部门-角色-权限）都在 BasicApi 后端用「内存 JOIN」完成，
+ * 对接 BasicNest（Nest.js 12 + Prisma 7）企业级 RBAC 后端。
+ * 所有关联（用户-部门-角色-权限）由后端在 Prisma 层 JOIN 聚合后返回，
  * 前端只消费聚合结果，不需要自己拼装。
  */
 
@@ -139,7 +140,7 @@ export function assignUserRoles(
 ): Promise<null> {
   return unwrap(
     http<null>({
-      url: `${RBAC}/user/roles`,
+      url: `${RBAC}/users/roles`,
       method: 'POST',
       data: { userId, roleIds, operator: currentUsername() },
     }),
@@ -147,13 +148,13 @@ export function assignUserRoles(
 }
 
 export function fetchUserRoles(userId: string | number): Promise<string[]> {
-  return unwrap(http<string[]>({ url: `${RBAC}/user/roles`, method: 'GET', params: { userId } }));
+  return unwrap(http<string[]>({ url: `${RBAC}/users/roles`, method: 'GET', params: { userId } }));
 }
 
 export function resetUserPassword(userId: string | number, password = '123456'): Promise<null> {
   return unwrap(
     http<null>({
-      url: `${RBAC}/user/reset-password`,
+      url: `${RBAC}/users/reset-password`,
       method: 'POST',
       data: { userId, password, operator: currentUsername() },
     }),
@@ -163,7 +164,7 @@ export function resetUserPassword(userId: string | number, password = '123456'):
 export function updateUserStatus(userId: string | number, status: string): Promise<null> {
   return unwrap(
     http<null>({
-      url: `${RBAC}/user/status`,
+      url: `${RBAC}/users/status`,
       method: 'POST',
       data: { userId, status, operator: currentUsername() },
     }),
