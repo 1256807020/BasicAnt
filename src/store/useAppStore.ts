@@ -14,6 +14,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import type { UserInfo } from '@/types';
+import { fetchMeProfile } from '@/api/rbac';
 import { clearToken, setToken } from '@/utils/auth';
 import { THEME_PRESETS } from '@/theme/presets';
 
@@ -65,6 +66,12 @@ interface AppState {
   syncSystemTheme: () => void;
   /** 是否拥有某个权限码（超级管理员恒为 true） */
   hasPermission: (code?: string) => boolean;
+  /** 菜单级权限判定：拥有该 code 或其任一子权限码即放行（用于路由守卫与侧边栏） */
+  hasMenuPermission: (code?: string) => boolean;
+  /** 原地更新用户信息（保留 token，用于权限实时刷新） */
+  setUserInfo: (userInfo: UserInfo) => void;
+  /** 拉取最新 userInfo 并原地更新（权限变更后免重登刷新） */
+  refreshUserInfo: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -102,6 +109,28 @@ export const useAppStore = create<AppState>()(
         if (userInfo.isAdmin) return true;
         // 旧版本持久化的 userInfo 可能没有 permissions 字段，这里做防御
         return Array.isArray(userInfo.permissions) && userInfo.permissions.includes(code);
+      },
+
+      hasMenuPermission: (code) => {
+        if (!code) return true;
+        const { userInfo } = get();
+        if (!userInfo) return false;
+        if (userInfo.isAdmin) return true;
+        const perms = userInfo.permissions ?? [];
+        return perms.some((p) => p === code || p.startsWith(`${code}:`));
+      },
+
+      setUserInfo: (userInfo) => set({ userInfo }),
+
+      refreshUserInfo: async () => {
+        const cur = get().userInfo;
+        if (!cur?.id) return;
+        try {
+          const u = await fetchMeProfile();
+          set({ userInfo: u });
+        } catch {
+          /* 静默：未登录或接口异常不影响当前会话 */
+        }
       },
     }),
     {

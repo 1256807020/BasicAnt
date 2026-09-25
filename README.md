@@ -248,6 +248,8 @@ hasPermission: (code) =>
 - ✅ `userInfo` 持久化（zustand + localStorage）与版本迁移
 - ✅ **后端接口级鉴权**：`RequirePermGuard` 全局守卫，无权限 `403`（2026-09-25 实测：无权限账号调受保护接口返回 403）
 - ✅ **数据权限生效**：`dataScope` 注入查询条件，非管理员仅见授权范围（2026-09-25 实测：部门经理可见 2 人 / admin 可见 3 人）
+- ✅ **前端路由级守卫**：`RequirePerm` 按菜单权限码拦截无权限页面，直访 URL 渲染 403（2026-09-25 落地）
+- ✅ **权限实时刷新**：后端推 `permission_updated` → 前端 WS 监听调用 `refreshUserInfo()` 原地更新（免重登，2026-09-25 落地）
 
 ### 7.5 企业级缺口闭合状态（基于 BasicNest 实测）
 
@@ -255,8 +257,8 @@ hasPermission: (code) =>
 
 1. **后端接口级鉴权** ✅ **已闭合（实测）**：`RequirePermGuard` 全局守卫读取 `@RequirePerm(...)`，无权限返回 `403`，`isAdmin` 恒放行。验证：无权限账号调 `/rbac/users` 返回 403，admin 返回 200。
 2. **数据权限（dataScope）** ✅ **已生效（实测）**：`DataScopeService.applyWhere` 在 `users` / `posts` 列表注入部门范围条件，`self/dept/deptAndBelow/all/custom` 按 `deptId` 过滤且分页 `total` 同步。验证：部门经理（deptAndBelow）可见用户数 2，admin 可见 3。
-3. **路由级守卫** ❌ **仍待补（前端侧）**：后端接口已兜底鉴权（越权返回 403），但前端路由仅按菜单隐藏；无权限用户直接敲 URL 仍可加载页面（数据请求会被后端拦截）。需在路由层加 `RequirePerm` 守卫。
-4. **权限变更实时生效** ❌ **仍待补**：`userInfo.permissions` 缓存于 localStorage，改完角色权限需**重新登录**才刷新。企业级应提供变更后主动刷新（事件总线 / WebSocket 推送）。
+3. **路由级守卫** ✅ **已落地（2026-09-25）**：前端 `AppRouter` 新增 `RequirePerm` 守卫，按菜单级权限码（与 `menu.ts` 一致）拦截；无权限用户直访 URL 渲染 403 页（`Forbidden`），后端 `RequirePermGuard` 仍兜底接口 403。
+4. **权限变更实时生效** ✅ **已落地（2026-09-25）**：后端在「角色权限变更 / 用户-角色变更」时经 `EventEmitter2` 发 `permission.changed`，`NotificationsGateway` 向受影响用户 WS 推送 `permission_updated`；前端监听后调用 `refreshUserInfo()` 拉取最新 `/auth/me` 原地更新（免重登），菜单 / 按钮 / 路由立即生效。
 5. **权限树未按 type 过滤** ✅ **已自然解决**：种子权限节点仅含 `menu` / `button` 两类，**不存在 `api` 类型节点**，故分配树中无 api 混入问题；若未来引入 api 类节点，前端 Tree 可按 `type` 分开展示。
 6. **高级特性** 🔶 **规划中**：默认角色、数据权限模板、权限/角色继承、临时授权、IP/时间限制、TOTP MFA 等尚未实现（MFA 作为可插拔模块待后续迭代，见 §12.8）。
 
@@ -649,8 +651,8 @@ notices(id, title, content, type, status, publisher, ...)
 
 1. **接口级鉴权**（§7.5-1）✅ **已闭合（实测）**：`RequirePermGuard` 全局守卫，无权限返回 `403`，`isAdmin` 恒放行。
 2. **数据权限**（§7.5-2）✅ **已生效（实测）**：`dataScope` 注入查询条件，非管理员仅见授权范围，分页 `total` 同步。
-3. **路由级守卫**（§7.5-3）❌ **前端侧待补**：后端兜底 403 已存在，但前端路由仅按菜单隐藏，直访 URL 仍可加载页面。
-4. **权限变更实时生效**（§7.5-4）❌ **前端侧待补**：`userInfo.permissions` 缓存 localStorage，改完角色需重登。
+3. **路由级守卫**（§7.5-3）✅ **已落地**：前端 `RequirePerm` 按菜单权限码拦截，无权限渲染 403 页。
+4. **权限变更实时生效**（§7.5-4）✅ **已落地**：后端 WS 推送 `permission_updated`，前端即时刷新 `userInfo`（免重登）。
 5. **权限树 type 过滤**（§7.5-5）✅ **已自然解决**：种子权限节点仅含 `menu` / `button`，无 `api` 混入。
 6. **用户-角色对称端点**（§7.6）✅ **已落地**：`user_role` 关联表 + 对称端点 + 事务 + 级联。
 7. **行级 / 字段级权限** 🔶：CASL 式细粒度待 P7。
@@ -693,10 +695,10 @@ notices(id, title, content, type, status, publisher, ...)
 
 ### 13.8 前端侧也需补（配合企业级）
 
-1. **路由守卫未实现**（§7.5-3 前端侧）❌。
-2. **权限变更需刷新**（§7.5-4 前端侧）❌。
+1. **路由守卫已实现**（§7.5-3）✅：前端 `RequirePerm` 守卫 + 403 页。
+2. **权限变更实时刷新已实现**（§7.5-4）✅：WS `permission_updated` → `refreshUserInfo()`。
 3. **全局错误边界细化**：统一 ErrorBoundary / 网络断开提示。
 4. **加载态统一**：部分页缺骨架屏。
 5. **国际化后端联动**：语言切换未影响后端枚举。
 
-> 以上即 BasicNest 从「演示基线到企业级基座」的能力成熟度。实施顺序见 §12.5（P0~P7），其中 P3（接口鉴权）、P4（数据权限）、P2（用户-角色关联表）是安全闭环三大支柱，已落地；P6 前端守卫、P7 高级特性仍为下一步重点。
+> 以上即 BasicNest 从「演示基线到企业级基座」的能力成熟度。实施顺序见 §12.5（P0~P7），其中 P2（用户-角色关联表）、P3（接口鉴权）、P4（数据权限）、P6（前端路由守卫 + 权限实时刷新）已落地；P7 高级特性（MFA、默认角色、继承、临时授权、IP/时段限制等）仍为下一步重点。

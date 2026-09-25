@@ -24,7 +24,10 @@ export function useNotifications() {
   const retryRef = useRef(0);
   const timerRef = useRef<number | null>(null);
   const notifyRef = useRef(antdNotification);
-  notifyRef.current = antdNotification;
+  // 在 effect 中同步最新实例，避免在渲染期写 ref（符合 react-hooks/refs 规则）
+  useEffect(() => {
+    notifyRef.current = antdNotification;
+  }, [antdNotification]);
 
   useEffect(() => {
     if (!token) return; // 未登录不连接
@@ -61,6 +64,15 @@ export function useNotifications() {
             description: item.content ?? '',
             placement: 'topRight',
             duration: 4,
+          });
+        } else if (msg.event === 'permission_updated') {
+          // 权限已变更（角色权限 / 用户-角色关系变化）：原地刷新 userInfo，菜单/按钮/路由立即生效
+          void useAppStore.getState().refreshUserInfo();
+          notifyRef.current.open({
+            message: '权限已更新',
+            description: '您的访问权限已实时刷新',
+            placement: 'topRight',
+            duration: 3,
           });
         }
       };

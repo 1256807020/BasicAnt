@@ -15,6 +15,9 @@ export interface RouteConfig {
   element?: ReactNode;
   /** index 路由：父路径默认展示 */
   index?: boolean;
+  /** 进入该路由所需权限码（菜单 code）；缺省则不鉴权（仅登录即可）。
+   *  守卫用「菜单级」判定：拥有该 code 或其任一子权限码即放行（与侧边栏一致）。 */
+  permission?: string | string[];
   children?: RouteConfig[];
 }
 
@@ -51,19 +54,19 @@ export const routeConfig: RouteConfig[] = [
     component: BasicLayout,
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
-      { path: 'dashboard', component: Dashboard },
-      { path: 'system/user', component: UserList },
-      { path: 'system/role', component: RoleList },
-      { path: 'system/permission', component: PermissionList },
-      { path: 'system/dept', component: DeptList },
-      { path: 'system/post', component: PostList },
-      { path: 'system/dict', component: DictList },
-      { path: 'system/log', component: LogList },
-      { path: 'system/config', component: ConfigList },
-      { path: 'content/article', component: ArticleList },
-      { path: 'content/notice', component: NoticeList },
-      { path: 'content/tag', component: TagList },
-      { path: 'data/table', component: DataTable },
+      { path: 'dashboard', component: Dashboard, permission: 'dashboard' },
+      { path: 'system/user', component: UserList, permission: 'system:user' },
+      { path: 'system/role', component: RoleList, permission: 'system:role' },
+      { path: 'system/permission', component: PermissionList, permission: 'system:permission' },
+      { path: 'system/dept', component: DeptList, permission: 'system:dept' },
+      { path: 'system/post', component: PostList, permission: 'system:post' },
+      { path: 'system/dict', component: DictList, permission: 'system:dict' },
+      { path: 'system/log', component: LogList, permission: 'system:log' },
+      { path: 'system/config', component: ConfigList, permission: 'system:config' },
+      { path: 'content/article', component: ArticleList, permission: 'content:post' },
+      { path: 'content/notice', component: NoticeList, permission: 'content:notice' },
+      { path: 'content/tag', component: TagList, permission: 'content:tag' },
+      { path: 'data/table', component: DataTable, permission: 'data:table' },
       { path: 'profile', component: Profile },
       { path: '*', component: NotFound },
     ],

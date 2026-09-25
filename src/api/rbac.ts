@@ -48,6 +48,11 @@ export function fetchMe(userId: string | number): Promise<LoginResult> {
   return unwrap(http<LoginResult>({ url: `${RBAC}/auth/me`, method: 'GET', params: { userId } }));
 }
 
+/** 拉取当前登录用户最新信息（权限变更后免重登刷新，返回 UserInfo） */
+export function fetchMeProfile(): Promise<UserInfo> {
+  return unwrap(http<UserInfo>({ url: `${RBAC}/auth/me`, method: 'GET' }));
+}
+
 export function updatePassword(params: {
   userId: string | number;
   oldPassword?: string;
