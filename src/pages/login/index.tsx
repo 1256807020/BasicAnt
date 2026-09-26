@@ -16,22 +16,25 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { App, Form, Input, Tabs, Typography } from 'antd';
-import { useRef, useState, type CSSProperties } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import Lenis from 'lenis';
 import { Lottie } from 'lottie-react';
-import { login, register } from '@/api/rbac';
+import { fetchCaptcha, login, register } from '@/api/rbac';
 import { useAppStore } from '@/store/useAppStore';
 import MotionButton from '@/components/MotionButton';
 import LangSwitch from '@/components/LangSwitch';
 import ThemeSwitch from '@/components/ThemeSwitch';
+import { setRefreshToken } from '@/utils/auth';
 import './login.css';
 
 interface LoginFormValues {
   username: string;
   password: string;
+  captchaId?: string;
+  captcha?: string;
 }
 
 interface RegisterFormValues {
@@ -39,6 +42,8 @@ interface RegisterFormValues {
   password: string;
   confirmPassword: string;
   nickname?: string;
+  captchaId?: string;
+  captcha?: string;
 }
 
 const FEATURES = [
@@ -56,6 +61,31 @@ export default function LoginPage() {
   const colorPrimary = useAppStore((state) => state.colorPrimary);
   const resolvedTheme = useAppStore((state) => state.theme);
   const { message } = App.useApp();
+  const [captcha, setCaptcha] = useState<{ captchaId: string; image: string } | null>(null);
+
+  const refreshCaptcha = async () => {
+    try {
+      setCaptcha(await fetchCaptcha());
+    } catch {
+      // 验证码获取失败不阻断登录
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const c = await fetchCaptcha();
+        if (active) setCaptcha(c);
+      } catch {
+        // 验证码获取失败不阻断登录
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [activeTab]);
+
   const root = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -141,9 +171,10 @@ export default function LoginPage() {
   const onLogin = async (values: LoginFormValues) => {
     setSubmitting(true);
     try {
-      const { token, userInfo } = await login(values);
-      setAuth(token, userInfo);
-      message.success(`欢迎回来，${userInfo.nickname}`);
+      const res = await login(values);
+      setAuth(res.token, res.userInfo);
+      if (res.refreshToken) setRefreshToken(res.refreshToken);
+      message.success(`欢迎回来，${res.userInfo.nickname}`);
       const from = (location.state as { from?: string } | null)?.from;
       navigate(from ?? '/dashboard', { replace: true });
     } catch {
@@ -160,6 +191,8 @@ export default function LoginPage() {
         username: values.username,
         password: values.password,
         nickname: values.nickname,
+        captchaId: captcha?.captchaId,
+        captcha: values.captcha,
       });
       message.success('注册成功，请登录');
       setActiveTab('login');
@@ -210,7 +243,7 @@ export default function LoginPage() {
               </li>
             ))}
           </ul>
-          <div className="intro-footer">© 2026 ReactAdmin · 演示账号 admin / 123456</div>
+          <div className="intro-footer">© 2026 ReactAdmin · 演示账号 admin / BasicNest@123</div>
         </div>
       </section>
 
@@ -237,7 +270,7 @@ export default function LoginPage() {
           {activeTab === 'login' ? (
             <Form<LoginFormValues>
               size="large"
-              initialValues={{ username: 'admin', password: '123456' }}
+              initialValues={{ username: 'admin', password: 'BasicNest@123' }}
               onFinish={onLogin}
             >
               <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
@@ -252,6 +285,22 @@ export default function LoginPage() {
                   prefix={<LockOutlined />}
                   placeholder="密码"
                   autoComplete="current-password"
+                />
+              </Form.Item>
+              <div style={{ textAlign: 'right', marginBottom: 12 }}>
+                <Link to="/forgot">忘记密码？</Link>
+              </div>
+              <Form.Item name="captcha" rules={[{ required: true, message: '请输入验证码' }]}>
+                <Input
+                  prefix={<SafetyCertificateOutlined />}
+                  placeholder="图形验证码"
+                  addonAfter={
+                    <span
+                      style={{ cursor: 'pointer', display: 'inline-block', lineHeight: 0 }}
+                      onClick={refreshCaptcha}
+                      dangerouslySetInnerHTML={{ __html: captcha?.image ?? '' }}
+                    />
+                  }
                 />
               </Form.Item>
               <MotionButton type="primary" htmlType="submit" block loading={submitting}>
@@ -276,7 +325,9 @@ export default function LoginPage() {
                 name="password"
                 rules={[
                   { required: true, message: '请输入密码' },
-                  { min: 6, message: '密码至少 6 位' },
+                  { min: 8, message: '密码至少 8 位' },
+                  { pattern: /[A-Za-z]/, message: '密码需包含字母' },
+                  { pattern: /\d/, message: '密码需包含数字' },
                 ]}
               >
                 <Input.Password prefix={<LockOutlined />} placeholder="密码（至少 6 位）" />
@@ -296,6 +347,19 @@ export default function LoginPage() {
               >
                 <Input.Password prefix={<LockOutlined />} placeholder="确认密码" />
               </Form.Item>
+              <Form.Item name="captcha" rules={[{ required: true, message: '请输入验证码' }]}>
+                <Input
+                  prefix={<SafetyCertificateOutlined />}
+                  placeholder="图形验证码"
+                  addonAfter={
+                    <span
+                      style={{ cursor: 'pointer', display: 'inline-block', lineHeight: 0 }}
+                      onClick={refreshCaptcha}
+                      dangerouslySetInnerHTML={{ __html: captcha?.image ?? '' }}
+                    />
+                  }
+                />
+              </Form.Item>
               <MotionButton type="primary" htmlType="submit" block loading={submitting}>
                 注册
               </MotionButton>
@@ -306,8 +370,8 @@ export default function LoginPage() {
             type="secondary"
             style={{ marginTop: 16, marginBottom: 0, fontSize: 12 }}
           >
-            演示账号：admin / 123456（超级管理员），zhangsan / 123456（部门经理），lisi /
-            123456（普通用户）
+            演示账号：admin / BasicNest@123（超级管理员），zhangsan /
+            BasicNest@123（部门经理），lisi / BasicNest@123（普通用户）
           </Typography.Paragraph>
         </div>
       </section>

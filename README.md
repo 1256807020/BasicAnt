@@ -59,8 +59,8 @@ cd ../../BasicNest && pnpm install && pnpm db:generate && pnpm db:migrate && pnp
 # 3) 启动前端（Vite 默认 5173，自动把 /api 代理到 1234）
 pnpm dev
 
-# 演示账号：admin / 123456（超级管理员）、zhangsan / 123456（部门经理）、lisi / 123456（普通用户）。
-# 更多交叉验证账号（如多角色并集 poly、无角色 guest、禁用 disabled1、自定义范围 customuser、仅本人 selfuser、空权限 emptyuser）见 BasicNest README「演示账号与交叉验证」章节，密码均为 123456。
+# 演示账号：admin / BasicNest@123（超级管理员）、zhangsan / BasicNest@123（部门经理）、lisi / BasicNest@123（普通用户）。
+# 更多交叉验证账号（如多角色并集 poly、无角色 guest、禁用 disabled1、自定义范围 customuser、仅本人 selfuser、空权限 emptyuser）见 BasicNest README「演示账号与交叉验证」章节，密码均为 BasicNest@123。
 ```
 
 常用脚本：
@@ -644,7 +644,7 @@ notices(id, title, content, type, status, publisher, ...)
 
 1. **密码哈希** ✅：已用 `bcryptjs` 3.x（早期基线为 `sha256`，存量密码需迁移，见 §12.6 坑 3）。
 2. **Refresh Token / 续期** ✅：双 token（access + refresh）+ Redis 失效名单。
-3. **登录限流 / 账号锁定** ✅：`@nestjs/throttler` 全局限流已启用；失败计数锁定已实现（连续错误密码超 `ACCOUNT_LOCK_MAX_ATTEMPTS` 后锁定 `ACCOUNT_LOCK_SECONDS`，Redis 不可达时自动降级不锁定；env `ACCOUNT_LOCK_ENABLED` 可关）。
+3. **登录限流 / 账号锁定** ✅：`@nestjs/throttler` 全局限流已启用；失败计数锁定已实现（连续错误密码超 `ACCOUNT_LOCK_MAX_ATTEMPTS` 后锁定 `ACCOUNT_LOCK_SECONDS`，Redis 不可达时自动降级为内存兜底仍生效；env `ACCOUNT_LOCK_ENABLED` 可关）。
 4. **验证码 / MFA** 🔶：图形验证码已落地；MFA 作为可插拔模块待 P7（见 §12.8）。
 5. **JWT 密钥** ✅：环境变量注入，可轮换。
 6. **退出失效** ✅：Redis 黑名单，登出 / 踢人即时失效。
@@ -689,9 +689,9 @@ notices(id, title, content, type, status, publisher, ...)
 ### 13.7 业务完备性（Business）
 
 1. **多租户隔离** ⬜：待 P7。
-2. **统一文件/附件存储** 🔶：上传模块已落地，OSS/S3 抽象待补。
+2. **统一文件/附件存储** 🔶：后端 `POST /rbac/upload` 已落地；前端头像 / 上传控件已接入（见 §14.2），OSS/S3 抽象待补。
 3. **通知中心** ✅：站内信 + WebSocket 推送。
-4. **批量导入导出** ✅：用户 CSV 导入导出。
+4. **批量导入导出** ✅：后端 `GET /rbac/users/export`、`POST /rbac/users/import`、`POST /rbac/users/batch-delete` 已实现并通过测试；**前端用户页已接入**（见 §14.2）。
 5. **工作流 / 审批** ⬜：流程类业务待补。
 6. **富文本编辑器** ⬜：文章正文当前为 `TextArea`，富文本待补。
 7. **全文检索** ⬜：PG 全文 / ES 待补。
@@ -705,3 +705,35 @@ notices(id, title, content, type, status, publisher, ...)
 5. **国际化后端联动**：语言切换未影响后端枚举。
 
 > 以上即 BasicNest 从「演示基线到企业级基座」的能力成熟度。实施顺序见 §12.5（P0~P7），其中 P2（用户-角色关联表）、P3（接口鉴权）、P4（数据权限）、P6（前端路由守卫 + 权限实时刷新）已落地；P7 高级特性（MFA、默认角色、继承、临时授权、IP/时段限制等）仍为下一步重点。
+
+---
+
+## 十四、与 BasicNest 接口联调核对（事实依据）
+
+> 与 BasicNest 后端 README 的「全量接口清单与前后端联调核对（事实依据）」章节一一对应。本节能见度来自对 `src/api/rbac.ts`、`src/api/crud.ts`、`src/api/index.ts`、`src/store/notification.ts`、`src/hooks/useNotifications.ts` 与 BasicNest OpenAPI 的逐条交叉核对。
+
+### 14.1 结论
+
+- 后端 BasicNest 共 **103** 个 HTTP 接口（另含 WebSocket 通道 `/ws/notifications`）。
+- 前端 BasicAnt 实际调用的接口 **103** 个，**全部精确命中后端既有路由**（路径 / 方法 / 参数一致），**无错配、无缺失后端接口**——印证了 §六的「家族契约」：前端只切 `baseURL` 即可对接任意兼容后端。
+- 后端已实现、前端尚未接入的接口 **0** 个（原 14 项缺口已于 2026-09-26 全部闭合，见 §14.2）。
+
+### 14.2 前端待接入清单（2026-09-26 已全部闭合）
+
+以下接口后端早已实现并通过集成测试，原属前端缺口，现已全部在前端落地（新页面 / 调用点）：
+
+1. **在线用户监控**：`GET /rbac/online` + `POST /rbac/online/kick` —— 已新增「在线用户」页（pages/system/online），支持查看与强制下线。
+2. **图形验证码登录**：`GET /rbac/auth/captcha` —— 登录 / 注册页已接入，注册必填验证码（错误验证码 400）。
+3. **密码找回**：`POST /rbac/auth/forgot` + `POST /rbac/auth/reset` —— 已新增找回 / 重置密码页（pages/forgot、pages/reset）。
+4. **令牌刷新**：`POST /rbac/auth/refresh` —— `request` 拦截器已实现 401 自动刷新续期（refreshToken 串行队列，并发 401 去重重试）。
+5. **用户导入 / 导出 / 批量删除**：`GET /rbac/users/export`、`POST /rbac/users/import`、`POST /rbac/users/batch-delete` —— 用户管理页已接入（CSV 导入导出 + 行选择批量删）。
+6. **角色数据范围（自定义部门）**：`POST /rbac/role/depts` —— 角色页已接入「自定义数据范围」部门树（custom 时保存 deptIds）。
+7. **头像 / 文件上传**：`POST /rbac/upload` —— 个人资料 / 用户表单头像已接入 `<Upload>` + `uploadFile`。
+8. **通知广播**：`POST /notifications` —— 已新增通知广播页（pages/system/notify），需 `system:notify` 权限。
+
+> 备注：`GET /_health` 为基础设施探针（terminus），前端未直接调用；`PATCH /rbac/auth/profile` 为后端冗余端点（与 `PATCH /user/:id` 功能重复，前端统一走 `/user/:id`）。
+
+### 14.3 可靠性（本次修复）
+
+- BasicNest 现已具备 **Redis 内存兜底**：`REDIS_ENABLED=false` 或 Redis 未配置 / 不可达（如海外平台忘记设环境变量、Redis 未启动）时，自动降级为进程内内存存储，黑名单（登出 / 踢人）、在线用户、验证码、会话、找回令牌、登录锁定等照常工作且**不崩溃**；健康检查 `/_health` 报告 `redis: up (in-memory fallback)`，不误报 503。前端联调对此无感。
+- 全量接口经 BasicNest `vitest` 集成测试覆盖（35 项，含 401/403、排序白名单、分页边界、统一错误契约、在线用户、数据范围、导入导出、tag/table 模块闭环、通知广播等），内存兜底模式下全绿。

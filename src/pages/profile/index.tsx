@@ -19,10 +19,11 @@ import {
   Space,
   Tag,
   Typography,
+  Upload,
 } from 'antd';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { updatePassword, updateProfile } from '@/api/rbac';
+import { updatePassword, updateProfile, uploadFile } from '@/api/rbac';
 import { useAppStore } from '@/store/useAppStore';
 import { usePermission } from '@/hooks/usePermission';
 
@@ -102,9 +103,28 @@ export default function ProfilePage() {
     <div className="page-container">
       <Card>
         <Space size="large" align="center">
-          <Avatar size={72} style={{ backgroundColor: '#1677ff', fontSize: 28 }}>
-            {userInfo.nickname?.slice(0, 1) ?? 'U'}
-          </Avatar>
+          <Upload
+            showUploadList={false}
+            beforeUpload={async (file) => {
+              try {
+                const { url } = await uploadFile(file);
+                await updateProfile(userInfo.id, { avatar: url });
+                setAuth(useAppStore.getState().token, { ...userInfo, avatar: url });
+                message.success('头像已更新');
+              } catch {
+                // 拦截器已统一提示
+              }
+              return false;
+            }}
+          >
+            <Avatar
+              size={72}
+              src={userInfo.avatar}
+              style={{ backgroundColor: '#1677ff', fontSize: 28, cursor: 'pointer' }}
+            >
+              {!userInfo.avatar ? (userInfo.nickname?.slice(0, 1) ?? 'U') : ''}
+            </Avatar>
+          </Upload>
           <div>
             <Typography.Title level={4} style={{ margin: 0 }}>
               {userInfo.nickname}
@@ -218,7 +238,9 @@ export default function ProfilePage() {
                 label="新密码"
                 rules={[
                   { required: true, message: '请输入新密码' },
-                  { min: 6, message: '密码至少 6 位' },
+                  { min: 8, message: '密码至少 8 位' },
+                  { pattern: /[A-Za-z]/, message: '密码需包含字母' },
+                  { pattern: /\d/, message: '密码需包含数字' },
                 ]}
               >
                 <Input.Password placeholder="请输入新密码" />

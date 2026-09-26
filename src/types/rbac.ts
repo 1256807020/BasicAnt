@@ -10,7 +10,7 @@
 export type MenuType = 'menu' | 'button' | 'api';
 
 /** 数据范围：全部 / 本部门及以下 / 本部门 / 仅本人 */
-export type DataScope = 'all' | 'deptAndBelow' | 'dept' | 'self';
+export type DataScope = 'all' | 'deptAndBelow' | 'dept' | 'self' | 'custom';
 
 /** 权限（菜单 / 按钮 / 接口） */
 export interface PermissionItem {
@@ -43,6 +43,8 @@ export interface RoleItem {
   permissionIds?: string[];
   permissionCount?: number;
   userCount?: number;
+  /** 自定义数据范围部门（dataScope=custom 时生效） */
+  deptIds?: string[];
 }
 
 /** 用户（列表接口已 JOIN 出部门 / 岗位 / 角色） */
@@ -152,7 +154,46 @@ export interface LogOverview {
 /** 登录返回 */
 export interface LoginResult {
   token: string;
+  /** 兼容旧前端字段（与 token 同值，访问令牌） */
+  accessToken?: string;
+  /** 刷新令牌：用于无感续期，存于 localStorage，不进 zustand */
+  refreshToken?: string;
+  /** 访问令牌有效期（秒） */
+  expiresIn?: number;
   userInfo: UserInfo;
+}
+
+/** 图形验证码 */
+export interface CaptchaResult {
+  captchaId: string;
+  image: string;
+}
+
+/** 在线用户 */
+export interface OnlineUser {
+  userId: string;
+  username: string;
+  nickname: string;
+}
+
+/** 站内信 / 通知项 */
+export interface NotificationItem {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  content?: string;
+  readAt?: string | null;
+  createdAt: string;
+}
+
+/** 广播通知参数 */
+export interface CreateNotificationParams {
+  title: string;
+  content?: string;
+  type?: string;
+  userIds?: string[];
+  broadcastAll?: boolean;
 }
 
 /** 当前登录用户完整信息 */
@@ -177,6 +218,8 @@ export interface UserInfo {
 export interface LoginParams {
   username: string;
   password: string;
+  captchaId?: string;
+  captcha?: string;
 }
 
 export interface RegisterParams {
@@ -186,4 +229,6 @@ export interface RegisterParams {
   nickname?: string;
   email?: string;
   phone?: string;
+  captchaId?: string;
+  captcha?: string;
 }

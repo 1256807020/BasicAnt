@@ -32,21 +32,48 @@ import {
   Tag,
   Tooltip,
   Tree,
+  TreeSelect,
   Typography,
   type TreeDataNode,
 } from 'antd';
-import { useMemo, useState, type Key } from 'react';
+import { useEffect, useMemo, useState, type Key } from 'react';
 import { useDebounceFn, useRequest } from 'ahooks';
+
+interface DeptTreeNode {
+  title: string;
+  value: string;
+  key: string;
+  children: DeptTreeNode[];
+}
+
+function toTreeData(
+  items: Array<{ id: string | number; name: string; parentId?: string | number | null }>,
+): DeptTreeNode[] {
+  const map = new Map<string | number, DeptTreeNode>();
+  const roots: DeptTreeNode[] = [];
+  items.forEach((it) =>
+    map.set(it.id, { title: it.name, value: String(it.id), key: String(it.id), children: [] }),
+  );
+  items.forEach((it) => {
+    const node = map.get(it.id)!;
+    const parent = it.parentId != null ? map.get(it.parentId) : undefined;
+    if (parent && parent.children) parent.children.push(node);
+    else roots.push(node);
+  });
+  return roots;
+}
 import {
   assignRoleUsers,
   assignUserRoles,
   createRole,
   deleteRole,
+  fetchAllDepts,
   fetchPermissionTree,
   fetchRolePermissions,
   fetchRoles,
   fetchUserRoles,
   fetchUsers,
+  saveRoleDeptIds,
   saveRolePermissions,
   updateRole,
 } from '@/api/rbac';
@@ -60,6 +87,7 @@ interface RoleFormValues {
   dataScope: DataScope;
   status: string;
   sort?: number;
+  deptIds?: Array<string | number>;
 }
 
 const DATA_SCOPE_OPTIONS = [
@@ -67,6 +95,7 @@ const DATA_SCOPE_OPTIONS = [
   { label: '本部门及以下', value: 'deptAndBelow' },
   { label: '本部门', value: 'dept' },
   { label: '仅本人', value: 'self' },
+  { label: '自定义部门', value: 'custom' },
 ];
 
 const DATA_SCOPE_TAG: Record<string, { text: string; color: string }> = {
@@ -111,6 +140,13 @@ export default function RoleListPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RoleItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [deptTree, setDeptTree] = useState<TreeDataNode[]>([]);
+
+  useEffect(() => {
+    fetchAllDepts()
+      .then((list) => setDeptTree(toTreeData(list)))
+      .catch(() => {});
+  }, []);
 
   /* ---------- 分配权限 ---------- */
   const [permDrawer, setPermDrawer] = useState(false);
@@ -222,12 +258,20 @@ export default function RoleListPage() {
     const values = await form.validateFields();
     setSubmitting(true);
     try {
+      const { deptIds, ...payload } = values;
+      let roleId: string | number;
       if (editing) {
-        await updateRole(editing.id, values);
+        await updateRole(editing.id, payload);
+        roleId = editing.id;
         message.success('修改成功');
       } else {
-        await createRole(values);
+        const created = await createRole(payload);
+        roleId = created.id;
         message.success('新增成功');
+      }
+      // 自定义数据范围：单独写入角色-部门关联
+      if (values.dataScope === 'custom') {
+        await saveRoleDeptIds(roleId, (deptIds ?? []).map(String));
       }
       setOpen(false);
       refresh();
@@ -475,6 +519,27 @@ export default function RoleListPage() {
                 <Select style={{ width: '100%' }} options={DATA_SCOPE_OPTIONS} />
               </Form.Item>
             </Col>
+            <Form.Item noStyle shouldUpdate>
+              {({ getFieldValue }) =>
+                getFieldValue('dataScope') === 'custom' ? (
+                  <Col xs={24}>
+                    <Form.Item
+                      name="deptIds"
+                      label="数据范围部门"
+                      rules={[{ required: true, message: '请选择自定义数据范围部门' }]}
+                    >
+                      <TreeSelect
+                        treeData={deptTree}
+                        treeCheckable
+                        showCheckedStrategy={TreeSelect.SHOW_CHILD}
+                        placeholder="选择可访问的部门"
+                        allowClear
+                      />
+                    </Form.Item>
+                  </Col>
+                ) : null
+              }
+            </Form.Item>
             <Col xs={24} sm={12}>
               <Form.Item name="sort" label="排序">
                 <InputNumber min={0} style={{ width: '100%' }} />

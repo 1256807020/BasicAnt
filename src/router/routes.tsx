@@ -44,11 +44,21 @@ const TagList = lazy(() => import('@/pages/content/tag'));
 // 数据管理
 const DataTable = lazy(() => import('@/pages/data/table'));
 
+// 在线用户 / 通知广播
+const OnlineList = lazy(() => import('@/pages/system/online'));
+const NotifyBroadcast = lazy(() => import('@/pages/system/notify'));
+
+// 密码找回（公开页）
+const Forgot = lazy(() => import('@/pages/forgot'));
+const Reset = lazy(() => import('@/pages/reset'));
+
 // 个人中心
 const Profile = lazy(() => import('@/pages/profile'));
 
 export const routeConfig: RouteConfig[] = [
   { path: '/login', component: Login },
+  { path: '/forgot', component: Forgot },
+  { path: '/reset', component: Reset },
   {
     path: '/',
     component: BasicLayout,
@@ -63,6 +73,8 @@ export const routeConfig: RouteConfig[] = [
       { path: 'system/dict', component: DictList, permission: 'system:dict' },
       { path: 'system/log', component: LogList, permission: 'system:log' },
       { path: 'system/config', component: ConfigList, permission: 'system:config' },
+      { path: 'system/online', component: OnlineList, permission: 'system:user' },
+      { path: 'system/notify', component: NotifyBroadcast, permission: 'system:notify' },
       { path: 'content/article', component: ArticleList, permission: 'content:post' },
       { path: 'content/notice', component: NoticeList, permission: 'content:notice' },
       { path: 'content/tag', component: TagList, permission: 'content:tag' },

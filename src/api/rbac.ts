@@ -7,6 +7,8 @@
  */
 
 import type {
+  CaptchaResult,
+  CreateNotificationParams,
   DeptItem,
   DictDataItem,
   DictItem,
@@ -14,6 +16,8 @@ import type {
   LogOverview,
   LoginParams,
   LoginResult,
+  NotificationItem,
+  OnlineUser,
   PermissionItem,
   RegisterParams,
   RoleItem,
@@ -21,7 +25,7 @@ import type {
   UserItem,
 } from '@/types';
 import type { PageResult } from '@/types';
-import { http } from '@/utils/request';
+import { http, request } from '@/utils/request';
 
 const RBAC = '/rbac';
 
@@ -122,6 +126,108 @@ export function logout(userId?: string | number, username?: string): Promise<nul
   );
 }
 
+/* --------------------------- 令牌续期 / 验证码 / 找回密码 --------------------------- */
+
+/** 用 refreshToken 换发新的 accessToken（无感续期，避免 7d 过期被迫重登） */
+export function refreshToken(
+  refreshToken: string,
+): Promise<{ accessToken: string; expiresIn: number }> {
+  return unwrap(
+    http<{ accessToken: string; expiresIn: number }>({
+      url: `${RBAC}/auth/refresh`,
+      method: 'POST',
+      data: { refreshToken },
+    }),
+  );
+}
+
+/** 获取图形验证码（注册 / 登录风控） */
+export function fetchCaptcha(): Promise<CaptchaResult> {
+  return unwrap(http<CaptchaResult>({ url: `${RBAC}/auth/captcha`, method: 'GET' }));
+}
+
+/** 密码找回：提交用户名，返回重置令牌（生产应经邮件/短信下发） */
+export function forgotPassword(username: string): Promise<{ token: string }> {
+  return unwrap(
+    http<{ token: string }>({ url: `${RBAC}/auth/forgot`, method: 'POST', data: { username } }),
+  );
+}
+
+/** 用令牌重置密码 */
+export function resetPasswordByToken(token: string, newPassword: string): Promise<null> {
+  return unwrap(
+    http<null>({ url: `${RBAC}/auth/reset`, method: 'POST', data: { token, newPassword } }),
+  );
+}
+
+/* ---------------------------------- 在线用户 ---------------------------------- */
+
+/** 在线用户列表（需 system:user 权限） */
+export function fetchOnlineUsers(): Promise<OnlineUser[]> {
+  return unwrap(http<OnlineUser[]>({ url: `${RBAC}/online`, method: 'GET' }));
+}
+
+/** 强制下线某用户（需 system:user 权限） */
+export function kickOnlineUser(userId: string): Promise<null> {
+  return unwrap(http<null>({ url: `${RBAC}/online/kick`, method: 'POST', data: { userId } }));
+}
+
+/* ---------------------------------- 文件上传 ---------------------------------- */
+
+/** 上传文件（头像等），返回可访问 url */
+export function uploadFile(file: File): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append('file', file);
+  return unwrap(http<{ url: string }>({ url: `${RBAC}/upload`, method: 'POST', data: form }));
+}
+
+/* ---------------------------------- 通知广播 ---------------------------------- */
+
+/** 管理员广播通知（需 system:notify 权限） */
+export function broadcastNotification(params: CreateNotificationParams): Promise<NotificationItem> {
+  return unwrap(http<NotificationItem>({ url: '/notifications', method: 'POST', data: params }));
+}
+
+/* ---------------------------------- 用户进阶操作 ---------------------------------- */
+
+/** 导出用户 CSV（返回二进制流） */
+export async function exportUsers(): Promise<Blob> {
+  const res = await request.get<Blob>(`${RBAC}/users/export`, { responseType: 'blob' });
+  return res.data;
+}
+
+/** 导入用户 CSV */
+export function importUsers(file: File): Promise<{ imported: number; skipped: number }> {
+  const form = new FormData();
+  form.append('file', file);
+  return unwrap(
+    http<{ imported: number; skipped: number }>({
+      url: `${RBAC}/users/import`,
+      method: 'POST',
+      data: form,
+    }),
+  );
+}
+
+/** 批量删除用户（自动排除自己与管理员） */
+export function batchDeleteUsers(ids: Array<string | number>): Promise<{ count: number }> {
+  return unwrap(
+    http<{ count: number }>({ url: `${RBAC}/users/batch-delete`, method: 'POST', data: { ids } }),
+  );
+}
+
+/* ---------------------------------- 角色数据范围 ---------------------------------- */
+
+/** 设置角色自定义数据范围部门（dataScope=custom 时生效） */
+export function saveRoleDeptIds(
+  roleId: string | number,
+  deptIds: Array<string | number>,
+): Promise<null> {
+  return unwrap(
+    http<null>({ url: `${RBAC}/role/depts`, method: 'POST', data: { roleId, deptIds } }),
+  );
+}
+
 /* ---------------------------------- 用户 ---------------------------------- */
 
 export interface UserQuery {
@@ -156,7 +262,10 @@ export function fetchUserRoles(userId: string | number): Promise<string[]> {
   return unwrap(http<string[]>({ url: `${RBAC}/users/roles`, method: 'GET', params: { userId } }));
 }
 
-export function resetUserPassword(userId: string | number, password = '123456'): Promise<null> {
+export function resetUserPassword(
+  userId: string | number,
+  password = 'BasicNest@123',
+): Promise<null> {
   return unwrap(
     http<null>({
       url: `${RBAC}/users/reset-password`,
@@ -419,19 +528,6 @@ export function fetchLogOverview(): Promise<LogOverview> {
 
 export function clearLogs(): Promise<null> {
   return unwrap(http<null>({ url: `${RBAC}/logs`, method: 'DELETE', params: { confirm: '1' } }));
-}
-
-/* ---------------------------------- 初始化 ---------------------------------- */
-
-export function seedRbac(): Promise<Record<string, number>> {
-  return unwrap(
-    http<Record<string, number>>({
-      url: `${RBAC}/seed`,
-      method: 'POST',
-      params: { confirm: '1' },
-      data: { confirm: '1' },
-    }),
-  );
 }
 
 /* ---------------------------------- 工具 ---------------------------------- */

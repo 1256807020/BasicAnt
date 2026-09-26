@@ -6,7 +6,13 @@
  * 关键操作：分配角色、重置密码、启用/禁用。
  */
 
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import {
+  DownloadOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+  UploadOutlined,
+} from '@ant-design/icons';
 import {
   App,
   Button,
@@ -25,6 +31,7 @@ import {
   Tooltip,
   Tree,
   TreeSelect,
+  Upload,
   Typography,
   type TreeDataNode,
 } from 'antd';
@@ -32,11 +39,14 @@ import { useMemo, useState } from 'react';
 import { useRequest } from 'ahooks';
 import {
   assignUserRoles,
+  batchDeleteUsers,
   createUser,
   deleteUser,
+  exportUsers,
   fetchAllDepts,
   fetchAllRoles,
   fetchUsers,
+  importUsers,
   resetUserPassword,
   updateUser,
   updateUserStatus,
@@ -111,6 +121,7 @@ export default function UserListPage() {
   const [roleTarget, setRoleTarget] = useState<UserItem | null>(null);
   const [roleIds, setRoleIds] = useState<Array<string | number>>([]);
   const [roleSaving, setRoleSaving] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Array<string | number>>([]);
 
   const { data: depts } = useRequest(fetchAllDepts);
   const { data: roles } = useRequest(fetchAllRoles);
@@ -170,11 +181,8 @@ export default function UserListPage() {
         if (values.roleIds) await assignUserRoles(editing.id, values.roleIds);
         message.success('修改成功');
       } else {
-        if (!values.password) {
-          message.warning('新增用户必须设置密码');
-          return;
-        }
-        await createUser({ ...values, password: values.password });
+        // 留空则使用统一初始密码 BasicNest@123；也可自定义（需满足密码策略）
+        await createUser({ ...values, password: values.password || 'BasicNest@123' });
         message.success('新增成功');
       }
       setOpen(false);
@@ -220,6 +228,44 @@ export default function UserListPage() {
     await deleteUser(id);
     message.success('删除成功');
     reload();
+  };
+
+  const handleExport = async () => {
+    try {
+      const blob = await exportUsers();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `users_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      message.success('导出成功');
+    } catch {
+      // 拦截器已统一提示
+    }
+  };
+
+  const handleImport = async (file: File) => {
+    try {
+      const res = await importUsers(file);
+      message.success(`导入完成：新增 ${res.imported}，跳过 ${res.skipped}`);
+      reload();
+    } catch {
+      // 拦截器已统一提示
+    }
+    return false; // 阻止 antd 默认上传，由我们手动调用接口
+  };
+
+  const handleBatchDelete = async () => {
+    if (!selectedRowKeys.length) return;
+    try {
+      const res = await batchDeleteUsers(selectedRowKeys);
+      message.success(`已删除 ${res.count} 个用户`);
+      setSelectedRowKeys([]);
+      reload();
+    } catch {
+      // 拦截器已统一提示
+    }
   };
 
   return (
@@ -272,10 +318,29 @@ export default function UserListPage() {
                   新增
                 </Button>
               </Auth>
+              <Auth code="system:user:add">
+                <Upload beforeUpload={handleImport} showUploadList={false} accept=".csv,.xlsx">
+                  <Button icon={<UploadOutlined />}>导入</Button>
+                </Upload>
+              </Auth>
+              <Auth code="system:user">
+                <Button icon={<DownloadOutlined />} onClick={handleExport}>
+                  导出
+                </Button>
+              </Auth>
+              <Auth code="system:user:delete">
+                <Button danger disabled={!selectedRowKeys.length} onClick={handleBatchDelete}>
+                  批量删除
+                </Button>
+              </Auth>
             </Space>
 
             <Table<UserItem>
               rowKey="id"
+              rowSelection={{
+                selectedRowKeys,
+                onChange: (keys) => setSelectedRowKeys(keys as unknown as Array<string | number>),
+              }}
               loading={loading}
               dataSource={list}
               // 列较多时横向滚动，配合首列 fixed:left、操作列 fixed:right
@@ -358,7 +423,7 @@ export default function UserListPage() {
                       </Auth>
                       <Auth code="system:user:reset">
                         <Popconfirm
-                          title="重置为 123456？"
+                          title="重置为 BasicNest@123？"
                           onConfirm={() => resetUserPassword(record.id).then(reload)}
                         >
                           <Button type="link" size="small">

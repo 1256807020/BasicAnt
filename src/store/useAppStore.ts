@@ -15,7 +15,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import type { UserInfo } from '@/types';
 import { fetchMeProfile } from '@/api/rbac';
-import { clearToken, setToken } from '@/utils/auth';
+import { clearRefreshToken, clearToken, setToken } from '@/utils/auth';
 import { THEME_PRESETS } from '@/theme/presets';
 
 /** 主题键：跟随系统 + 浅色 / 暗黑（默认蓝）/ 金橙（浅色 + 橙色主色），同一时刻只激活一个 */
@@ -91,6 +91,7 @@ export const useAppStore = create<AppState>()(
 
       logout: () => {
         clearToken();
+        clearRefreshToken();
         set({ token: '', userInfo: null });
       },
 
