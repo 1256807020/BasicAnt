@@ -298,8 +298,15 @@ export default function LoginPage() {
                     <span
                       style={{ cursor: 'pointer', display: 'inline-block', lineHeight: 0 }}
                       onClick={refreshCaptcha}
-                      dangerouslySetInnerHTML={{ __html: captcha?.image ?? '' }}
-                    />
+                    >
+                      {captcha?.image ? (
+                        <img
+                          src={captcha.image}
+                          alt="图形验证码"
+                          style={{ height: 24, display: 'block' }}
+                        />
+                      ) : null}
+                    </span>
                   }
                 />
               </Form.Item>
@@ -355,8 +362,15 @@ export default function LoginPage() {
                     <span
                       style={{ cursor: 'pointer', display: 'inline-block', lineHeight: 0 }}
                       onClick={refreshCaptcha}
-                      dangerouslySetInnerHTML={{ __html: captcha?.image ?? '' }}
-                    />
+                    >
+                      {captcha?.image ? (
+                        <img
+                          src={captcha.image}
+                          alt="图形验证码"
+                          style={{ height: 24, display: 'block' }}
+                        />
+                      ) : null}
+                    </span>
                   }
                 />
               </Form.Item>
