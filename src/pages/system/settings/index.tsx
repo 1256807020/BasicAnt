@@ -55,8 +55,18 @@ export default function SettingsPage() {
   const { message, modal } = App.useApp();
   const [form] = Form.useForm<SettingFormValues>();
 
-  const { list, total, loading, page, pageSize, setPage, setPageSize, setKeyword, reload } =
-    useCrudList<SettingItem>(settingsApi.list, { keywordFields: 'name,key,value,remark' });
+  const {
+    list,
+    total,
+    loading,
+    page,
+    pageSize,
+    setPage,
+    setPageSize,
+    setKeyword,
+    reload,
+    setFilters,
+  } = useCrudList<SettingItem>(settingsApi.list, { keywordFields: 'name,key,value,remark' });
 
   const [groupFilter, setGroupFilter] = useState<string | undefined>();
   const [open, setOpen] = useState(false);
@@ -67,7 +77,7 @@ export default function SettingsPage() {
   /** 过滤条件变化（关键字外的额外参数走 reload 的覆盖） */
   const reloadWithGroup = (group?: string) => {
     setGroupFilter(group);
-    reload({ group });
+    setFilters({ group });
   };
 
   const openCreate = () => {
@@ -205,7 +215,7 @@ export default function SettingsPage() {
               dataIndex: 'group',
               width: 100,
               render: (group?: string) => (
-                <Tag color={GROUP_COLOR[group] || 'default'}>{group || '-'}</Tag>
+                <Tag color={GROUP_COLOR[group ?? ''] || 'default'}>{group || '-'}</Tag>
               ),
             },
             { title: '排序', dataIndex: 'sort', width: 70 },
