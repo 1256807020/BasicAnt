@@ -1,8 +1,13 @@
 /**
  * useNotifications — 站内信 WebSocket 消费端
  * --------------------------------------------------
- * 登录后自动连接 ws://<host>/ws/notifications?token=...，断线指数退避重连；
+ * 登录后自动连接 /ws/notifications?token=...，断线指数退避重连；
  * 收到推送时弹 toast 并更新红点。需在 <AntdApp> 内调用（用 App.useApp() 弹提示）。
+ *
+ * 连接地址：
+ *  - 开发态：同源 ws://<host>/ws，由 vite proxy 转发到 BasicNest 后端；
+ *  - 生产态：若配置 VITE_WS_BASE_URL（如 wss://<sub>.suga.run），则直连该后端，
+ *    以兼容纯静态托管（Netlify / HuggingFace Spaces 无 /ws 代理）的场景。
  */
 
 import { useEffect, useRef } from 'react';
@@ -13,6 +18,10 @@ import { getToken } from '@/utils/auth';
 import type { NotificationItem } from '@/types';
 
 function wsUrl(): string {
+  const base = import.meta.env.VITE_WS_BASE_URL;
+  if (base) {
+    return `${base.replace(/\/$/, '')}/ws/notifications`;
+  }
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
   return `${proto}://${window.location.host}/ws/notifications`;
 }
