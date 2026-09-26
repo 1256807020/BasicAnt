@@ -62,6 +62,21 @@ export interface ConfigItem extends BaseRecord {
   remark?: string;
 }
 
+/** 网站设置（SEO / 社交联系方式等「全局展示类」配置，公开接口可读） */
+export interface SettingItem extends BaseRecord {
+  /** 键名：字母开头，仅含字母/数字/._-（如 site.name、contact.qq） */
+  key: string;
+  value?: string;
+  /** 展示名（如「网站名称」） */
+  name?: string;
+  /** 分组：site | seo | contact（可扩展） */
+  group?: string;
+  sort?: number;
+  /** 1启用 0停用（停用后公开接口不返回） */
+  status?: number;
+  remark?: string;
+}
+
 /** 通用数据表 */
 export interface TableItem extends BaseRecord {
   title: string;

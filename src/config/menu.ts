@@ -51,6 +51,7 @@ export const menuConfig: MenuNode[] = [
       { key: '/system/dict', label: '字典管理', icon: 'dict', code: 'system:dict' },
       { key: '/system/log', label: '审计日志', icon: 'log', code: 'system:log' },
       { key: '/system/config', label: '系统参数', icon: 'config', code: 'system:config' },
+      { key: '/system/settings', label: '网站设置', icon: 'setting', code: 'system:settings' },
       { key: '/system/online', label: '在线用户', icon: 'user', code: 'system:user' },
       { key: '/system/notify', label: '通知广播', icon: 'notice', code: 'system:notify' },
     ],

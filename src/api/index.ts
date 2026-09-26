@@ -5,7 +5,15 @@
  * 这里只放走通用 CRUD 的单集合业务：文章、公告、系统参数、通用数据、岗位
  */
 
-import type { ArticleItem, ConfigItem, NoticeItem, PostItem, TableItem, TagItem } from '@/types';
+import type {
+  ArticleItem,
+  ConfigItem,
+  NoticeItem,
+  PostItem,
+  SettingItem,
+  TableItem,
+  TagItem,
+} from '@/types';
 import { createCrudApi } from './crud';
 
 export * from './crud';
@@ -17,6 +25,8 @@ export const articleApi = createCrudApi<ArticleItem>('article');
 export const noticeApi = createCrudApi<NoticeItem>('notice');
 /** 系统参数 */
 export const configApi = createCrudApi<ConfigItem>('sys_config');
+/** 网站设置（SEO / 社交联系方式） */
+export const settingsApi = createCrudApi<SettingItem>('settings');
 /** 通用数据表 */
 export const tableApi = createCrudApi<TableItem>('table');
 /** 标签（动手练示例模块） */

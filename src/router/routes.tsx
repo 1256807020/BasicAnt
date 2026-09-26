@@ -35,6 +35,7 @@ const PostList = lazy(() => import('@/pages/system/post'));
 const DictList = lazy(() => import('@/pages/system/dict'));
 const LogList = lazy(() => import('@/pages/system/log'));
 const ConfigList = lazy(() => import('@/pages/system/config'));
+const SettingsPage = lazy(() => import('@/pages/system/settings'));
 
 // 内容管理
 const ArticleList = lazy(() => import('@/pages/content/article'));
@@ -73,6 +74,7 @@ export const routeConfig: RouteConfig[] = [
       { path: 'system/dict', component: DictList, permission: 'system:dict' },
       { path: 'system/log', component: LogList, permission: 'system:log' },
       { path: 'system/config', component: ConfigList, permission: 'system:config' },
+      { path: 'system/settings', component: SettingsPage, permission: 'system:settings' },
       { path: 'system/online', component: OnlineList, permission: 'system:user' },
       { path: 'system/notify', component: NotifyBroadcast, permission: 'system:notify' },
       { path: 'content/article', component: ArticleList, permission: 'content:post' },
